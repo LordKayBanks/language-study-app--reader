@@ -19,13 +19,13 @@ import {
   translationVoice2 as defaultTranslationVoice2,
 } from './constants';
 import './App.scss';
-//   Imports end
-//======================================================
 
 const storage = global.localStorage || null;
-
 class App extends Component {
   allSentences = [];
+  currentGroup = null;
+  sentence = null;
+  translation = null;
   constructor(props) {
     super(props);
 
@@ -128,6 +128,11 @@ class App extends Component {
     }
   };
 
+  cleanUpHighlights() {
+    this.sentence.classList.remove('highlightStyle');
+    this.translation.classList.remove('highlightStyle');
+    this.currentGroup.classList.remove('activeGroupHighlightStyle');
+  }
   speak = () => {
     const {
       currentPosition,
@@ -145,6 +150,9 @@ class App extends Component {
     let text = '';
     const currentGroup = this.allSentences[currentPosition];
     const [sentence, translation] = currentGroup?.querySelectorAll('div');
+    this.currentGroup = currentGroup;
+    this.sentence = sentence;
+    this.translation = translation;
     if (scroll)
       currentGroup.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
 
@@ -200,6 +208,12 @@ class App extends Component {
                 this.setState({ isNewGroup: 3 }, () => this.speak());
                 break;
               case 3:
+                //if this is the last group
+                if (this.state.currentPosition >= this.allSentences.length - 1) {
+                  this.cleanUpHighlights();
+                  return this.setState({ shouldSpeak: true, isPlaying: false, currentPosition: 0 });
+                }
+
                 this.setState(
                   (state, props) => {
                     return {
@@ -244,15 +258,20 @@ class App extends Component {
     }
   }
 
-  handleClick = ({ target }) => {
-    let currentPosition = target.parentNode.getAttribute('class');
-    currentPosition = parseInt(currentPosition.match(/\d+/g));
-    this.setState(
-      {
-        currentPosition: currentPosition >= 1 ? currentPosition - 1 : 0,
-        isNewGroup: true,
-      } /*, () => console.log(currentPosition)*/
-    );
+  handleDoubleClick = (event) => {
+    const { target, detail } = event;
+    if (detail === 2) {
+      this.cleanUpHighlights();
+
+      let currentPosition = target.parentNode.getAttribute('class');
+      currentPosition = parseInt(currentPosition.match(/\d+/g));
+      this.setState(
+        {
+          currentPosition: currentPosition >= 1 ? currentPosition - 1 : 0,
+          isNewGroup: true,
+        } /*, () => console.log(currentPosition)*/
+      );
+    }
   };
   handleSentenceVoiceChange = (sentenceVoice) => {
     this.setState(
@@ -447,7 +466,7 @@ class App extends Component {
                 <li
                   className={`orator-${index}`}
                   key={id}
-                  onClick={this.handleClick}
+                  onClick={this.handleDoubleClick}
                   style={group_style}
                 >
                   <div className="sentence" style={sentence_style}>
