@@ -1,0 +1,26 @@
+.slider-container {
+  width: 260px;
+  margin-bottom: 6px;
+}
+.slider-label {
+  text-align: center;
+  color: black;
+  font-size: 15px;
+  @media screen and (max-width: 786px) {
+    display: none;
+  }
+}
+
+.rc-slider-track {
+  background-color: rgb(59, 126, 156);
+}
+
+.rc-slider-handle {
+  // border: solid 2px #2eaae2;
+  border: solid 2px rgb(59, 126, 156);
+  background-color: #fff;
+}
+
+.rc-slider-step {
+  background: rgba(0, 0, 0, 0.13);
+}
