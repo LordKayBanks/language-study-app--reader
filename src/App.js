@@ -3,14 +3,16 @@ import Select from 'react-select';
 import Speech from 'speak-tts';
 import FileReaderInput from 'react-file-reader-input';
 import _ from 'lodash';
+import { v4 as uuid } from 'uuid';
 
 import Navigator from './Utility/Navigator';
-import { Container, GlobalStyle } from './Components';
+import { GlobalStyle } from './Components';
 import SpeedSlider from './modules/Components/SpeedSlider';
 
 import { defaultPlatformVoice } from './Utility/useful';
 import logoImage from './Icons/Logo.png';
-import { Pause, Play, Upload, Wave } from './Icons';
+import { Pause as pauseIcon, Play as playIcon, Upload, Wave } from './Icons';
+import { mockData } from './constants';
 import './App.scss';
 //   Imports end
 //======================================================
@@ -26,9 +28,10 @@ class App extends Component {
     let sentenceVoice = JSON.parse(storage?.getItem('sentenceVoice')) ?? '';
     let translationSpeed = JSON.parse(storage?.getItem('translationSpeed')) ?? '';
     let translationVoice = JSON.parse(storage?.getItem('translationVoice')) ?? '';
+    let data = JSON.parse(storage?.getItem('file')) ?? [];
 
     this.state = {
-      data: mockData,
+      data: data.length ? data : mockData,
       localName: null,
       largeText: !false,
       // =========
@@ -39,7 +42,9 @@ class App extends Component {
       translationVoice: translationVoice ?? {},
       currentPosition: 0,
       isNewGroup: true,
-      isPlaying: '',
+      shouldSpeak: true,
+      isPlaying: false,
+      scroll: true,
     };
     this.speech = new Speech(); // will throw an exception if not browser supported
     if (this.speech.hasBrowserSupport()) {
@@ -63,21 +68,38 @@ class App extends Component {
       listeners: {
         onvoiceschanged: (voices) => {
           let availableVoices = null;
+          let preferredVoices = null;
+          let otherVoices = null;
+          let sortedVoices = null;
           if (voices.length) {
-            availableVoices = voices
-              .map(({ lang, name }) => {
-                return {
-                  lang: lang,
-                  voice: name,
-                  label: `${lang} - ${name}`,
-                };
+            availableVoices = voices.map(({ lang, name }) => {
+              return {
+                lang: lang,
+                voice: name,
+                label: `${lang} - ${name}`,
+              };
+            });
+            preferredVoices = availableVoices
+              .filter(({ lang }) => {
+                if (lang.includes('en') || lang.includes('de')) return true;
+                else return false;
               })
               .sort(({ lang: langA }, { lang: langB }) => {
                 return langA.localeCompare(langB);
               });
+            otherVoices = availableVoices
+              .filter(({ lang }) => {
+                if (lang.includes('en') || lang.includes('de')) return false;
+                else return true;
+              })
+              .sort(({ lang: langA }, { lang: langB }) => {
+                return langA.localeCompare(langB);
+              });
+
+            sortedVoices = [...preferredVoices, ...otherVoices];
           }
 
-          this.setState({ voiceList: availableVoices } /*() => console.log(availableVoices)*/);
+          this.setState({ voiceList: sortedVoices } /*, () => console.log(sortedVoices)*/);
         },
       },
     });
@@ -86,23 +108,22 @@ class App extends Component {
     // document.removeEventListener("keydown", this.handleKeyPress, false);
   }
 
-  handleKeyPress = ({ key }) => {
-    key && key === 'ArrowUp' && this.prevSentence();
-    key && key === 'ArrowDown' && this.nextSentence();
-    key && key === ' ' && this.play_Pause();
+  play = () => {
+    if (this.state.shouldSpeak && !this.state.isPlaying) {
+      //start position
+      this.speak();
+      return this.setState({ isPlaying: true });
+    } else if (this.state.shouldSpeak && this.state.isPlaying) {
+      //pause it here
+      this.speech.cancel();
+      return this.setState({ shouldSpeak: false, isPlaying: false });
+    } else if (!this.state.shouldSpeak && !this.state.isPlaying) {
+      //resume it here
+      return this.setState({ shouldSpeak: true, isPlaying: true }, () => this.speak());
+    }
   };
 
-  pauseResume({ key }) {
-    if (key !== 'p') return;
-
-    if (this.speech.paused()) {
-      this.speech.resume();
-    } else if (this.speech.speaking()) {
-      this.speech.pause();
-    }
-  }
-
-  speak = (text) => {
+  speak = () => {
     const {
       currentPosition,
       isNewGroup,
@@ -110,21 +131,26 @@ class App extends Component {
       sentenceSpeed,
       translationVoice,
       translationSpeed,
+      scroll,
+      shouldSpeak,
     } = this.state;
+    if (!shouldSpeak) return;
+
+    let text = '';
     const currentGroup = this.allSentences[currentPosition];
-    // console.log(this.allSentences);
-    // return;
-    const [sentence, translation] = currentGroup?.querySelectorAll('span');
-    currentGroup.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-    // currentGroup.classList.add = 'currentGroupHighlightStyle';
+    const [sentence, translation] = currentGroup?.querySelectorAll('div');
+    if (scroll)
+      currentGroup.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+
+    currentGroup.classList.add('activeGroupHighlightStyle');
     if (isNewGroup) {
-      //   sentence.classList.add = 'highlightStyle';
+      sentence.classList.add('highlightStyle');
       text = sentence.textContent.trim();
       this.speech.setVoice(sentenceVoice.voice);
       this.speech.setLanguage(sentenceVoice.lang);
       this.speech.setRate(sentenceSpeed);
     } else {
-      //   translation.classList.add = 'highlightStyle';
+      translation.classList.add('highlightStyle');
       text = translation.textContent.trim();
       this.speech.setVoice(translationVoice.voice);
       this.speech.setLanguage(translationVoice.lang);
@@ -152,7 +178,7 @@ class App extends Component {
                   };
                 },
                 () => {
-                  //   sentence.classList.remove('highlightStyle');
+                  sentence.classList.remove('highlightStyle');
                   this.speak();
                 }
               );
@@ -165,8 +191,8 @@ class App extends Component {
                   };
                 },
                 () => {
-                  //   currentGroup.classList.remove('currentGroupHighlightStyle');
-                  //   translation.classList.remove('highlightStyle');
+                  currentGroup.classList.remove('activeGroupHighlightStyle');
+                  translation.classList.remove('highlightStyle');
                   this.speak();
                 }
               );
@@ -197,42 +223,15 @@ class App extends Component {
     }
   }
 
-  stop = () => {
-    if (this.state.isPlaying === 'stopped') return;
-
-    this.play_Pause(); //pause
-    this.speech.cancel();
-    this.setState({ isPlaying: 'stopped' });
-  };
-
-  play_Pause = () => {
-    if (this.state.isPlaying === 'stopped') {
-      this.allPages = this.allPages_tempstorage;
-      this.setState({ isPlaying: 'playing' });
-
-      // this.speech.resume();
-      // this.speech.cancel();
-
-      this.speak();
-      return;
-    } else if (this.state.isPlaying === 'playing') {
-      this.setState({ isPlaying: 'paused' });
-      return this.speech.pause();
-    } else if (this.state.isPlaying === 'paused') {
-      this.setState({ isPlaying: 'playing' });
-      return this.speech.resume();
-    } else {
-      // like for the first-time
-      this.setState({ isPlaying: 'playing' });
-      this.speech.cancel();
-      return this.speak();
-    }
-  };
-
   handleClick = ({ target }) => {
     let currentPosition = target.parentNode.getAttribute('class');
-    currentPosition = parseInt(currentPosition.match(/\d/g));
-    this.setState({ currentPosition });
+    currentPosition = parseInt(currentPosition.match(/\d+/g));
+    this.setState(
+      {
+        currentPosition: currentPosition >= 1 ? currentPosition - 1 : 0,
+        isNewGroup: true,
+      } /*, () => console.log(currentPosition)*/
+    );
   };
   handleSentenceVoiceChange = (sentenceVoice) => {
     this.setState(
@@ -300,6 +299,9 @@ class App extends Component {
   // =======================================
   // =======================================
 
+  handleScroll = () => {
+    this.setState({ scroll: !this.state.scroll });
+  };
   handleFileChange = (event, results) => {
     if (!results.length) return;
 
@@ -311,17 +313,19 @@ class App extends Component {
     jsonValue = Object.entries(jsonValue)
       .map(([key, value]) => value)
       .flat()
-      .map(({ text, translation }, index) => {
-        return { sentence: translation, translation: text, id: index };
+      .map(({ text, translation }) => {
+        return { sentence: translation, translation: text, id: uuid() };
       });
-    // console.log(jsonValue);
+
+    // console.log(file);
+    // console.log(JSON.stringify(jsonValue));
     this.setState(
       {
-        // data: jsonValue.slice(0, 10),
         data: jsonValue,
         currentPosition: 0,
       },
       () => {
+        localStorage.setItem('file', JSON.stringify(jsonValue));
         this.allSentences = [...document.querySelectorAll('[class^="orator-"]')];
       }
     );
@@ -374,46 +378,47 @@ class App extends Component {
                   {/* <div>Translation</div> */}
                 </div>
                 <div>
-                  <button className="playback-button" onClick={(e) => this.speak()}>
+                  <button className="playback-button" onClick={this.play}>
                     <img
-                      src={this.state.isPlaying === 'playing' ? Pause : Play}
-                      alt={this.state.isPlaying === 'playing' ? 'Pause' : 'Play'}
+                      src={this.state.shouldSpeak && this.state.isPlaying ? pauseIcon : playIcon}
+                      alt={this.state.shouldSpeak && this.state.isPlaying ? 'Pause' : 'Play'}
                     ></img>
                   </button>
                 </div>
                 <div className="file-reader">
                   <FileReaderInput as="buffer" onChange={this.handleFileChange}>
-                    <img src={Upload} className="Upload-button" alt="Book upload" />
+                    <img src={Upload} className="Upload-button" alt="Upload json or CSV file" />
                   </FileReaderInput>
                 </div>
               </div>
             </div>
           </header>
-          <Container>
-            <ol>
-              {data.map(({ translation, sentence, id }, index) => {
-                return (
-                  <li
-                    className={`orator-${index}`}
-                    key={id}
-                    onClick={this.handleClick}
-                    style={group_style}
-                  >
-                    <span className="sentence" style={sentence_style}>
-                      {sentence}
-                    </span>
-                    <span className="translation" style={translation_style}>
-                      {translation}
-                    </span>
-                  </li>
-                );
-              })}
-            </ol>
-          </Container>
-          <Wave
-            isPlaying={this.state.isPlaying === 'playing'}
-            waveStyle={{ bottom: '-16px' }}
-          ></Wave>
+          <ol style={{ marginTop: '55px' }}>
+            {data.map(({ translation, sentence, id }, index) => {
+              return (
+                <li
+                  className={`orator-${index}`}
+                  key={id}
+                  onClick={this.handleClick}
+                  style={group_style}
+                >
+                  <div className="sentence" style={sentence_style}>
+                    {sentence}
+                  </div>
+                  <div className="translation" style={translation_style}>
+                    {translation}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+          <button
+            className="scrollButton"
+            onClick={this.handleScroll}
+            style={{ background: this.state.scroll ? 'green' : 'red' }}
+          >
+            {this.state.scroll ? 'Scroll' : 'No Scroll'}
+          </button>
         </div>
       </>
     );
@@ -426,8 +431,8 @@ const group_style = {
   padding: '5px 10px',
   marginBottom: '10px',
   borderRadius: '5px',
-  display: 'flex',
-  flexDirection: 'column',
+  //   display: 'flex',
+  //   flexDirection: 'column',
 };
 const sentence_style = {
   color: 'deeppink',
@@ -439,92 +444,3 @@ const translation_style = {
   fontSize: '20px',
   //   display: 'inline',
 };
-
-const mockData = [
-  { translation: 'Mein Vater sagte immer', sentence: 'My old man used to tell me', key: 1 },
-  {
-    translation: 'Ist das ein Witz? Sind wir in der Hölle oder',
-    sentence: 'Is this a joke? Like, are we in hell or…?',
-    key: 2,
-  },
-  {
-    translation: 'Komm, Sarah. Lass uns gehen.',
-    sentence: "Let's go, Sarah. Let's get out of here.",
-    key: 3,
-  },
-  {
-    translation: 'werden Sie wegen Mordes mit erschwerenden Umständen angeklagt.',
-    sentence: 'you are charged with murder in the first degree with aggravated circumstances.',
-    key: 4,
-  },
-  { translation: 'Mein Vater sagte immer', sentence: 'My old man used to tell me', key: 5 },
-  {
-    translation: 'Ist das ein Witz? Sind wir in der Hölle oder',
-    sentence: 'Is this a joke? Like, are we in hell or…?',
-    key: 6,
-  },
-  {
-    translation: 'Komm, Sarah. Lass uns gehen.',
-    sentence: "Let's go, Sarah. Let's get out of here.",
-    key: 7,
-  },
-  {
-    translation: 'werden Sie wegen Mordes mit erschwerenden Umständen angeklagt.',
-    sentence: 'you are charged with murder in the first degree with aggravated circumstances.',
-    key: 8,
-  },
-  { translation: 'Mein Vater sagte immer', sentence: 'My old man used to tell me' },
-  {
-    translation: 'Ist das ein Witz? Sind wir in der Hölle oder',
-    sentence: 'Is this a joke? Like, are we in hell or…?',
-    key: 9,
-  },
-  {
-    translation: 'Komm, Sarah. Lass uns gehen.',
-    sentence: "Let's go, Sarah. Let's get out of here.",
-    key: 10,
-  },
-  { translation: 'Mein Vater sagte immer', sentence: 'My old man used to tell me', key: 11 },
-  {
-    translation: 'Ist das ein Witz? Sind wir in der Hölle oder',
-    sentence: 'Is this a joke? Like, are we in hell or…?',
-    key: 12,
-  },
-  {
-    translation: 'Komm, Sarah. Lass uns gehen.',
-    sentence: "Let's go, Sarah. Let's get out of here.",
-    key: 13,
-  },
-  {
-    translation: 'werden Sie wegen Mordes mit erschwerenden Umständen angeklagt.',
-    sentence: 'you are charged with murder in the first degree with aggravated circumstances.',
-    key: 14,
-  },
-  { translation: 'Mein Vater sagte immer', sentence: 'My old man used to tell me', key: 15 },
-  {
-    translation: 'Ist das ein Witz? Sind wir in der Hölle oder',
-    sentence: 'Is this a joke? Like, are we in hell or…?',
-    key: 16,
-  },
-  {
-    translation: 'Komm, Sarah. Lass uns gehen.',
-    sentence: "Let's go, Sarah. Let's get out of here.",
-    key: 17,
-  },
-  {
-    translation: 'werden Sie wegen Mordes mit erschwerenden Umständen angeklagt.',
-    sentence: 'you are charged with murder in the first degree with aggravated circumstances.',
-    key: 18,
-  },
-  { translation: 'Mein Vater sagte immer', sentence: 'My old man used to tell me' },
-  {
-    translation: 'Ist das ein Witz? Sind wir in der Hölle oder',
-    sentence: 'Is this a joke? Like, are we in hell or…?',
-    key: 19,
-  },
-  {
-    translation: 'Komm, Sarah. Lass uns gehen.',
-    sentence: "Let's go, Sarah. Let's get out of here.",
-    key: 20,
-  },
-];

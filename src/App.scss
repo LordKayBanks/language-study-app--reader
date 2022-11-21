@@ -381,12 +381,37 @@
 }
 
 .highlightStyle {
-  color: #060104;
-  font-size: 16px;
   background: #e9b87a;
+  color: #060104 !important;
+  font-size: 16px;
   font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 5px;
 }
-.currentGroupHighlightStyle {
-  background: #beacae;
+.activeGroupHighlightStyle {
+  background: #726e6f !important;
   box-shadow: rgba(234, 224, 224, 0.74) 0px 5px 15px;
+  transform: scale(1.05);
+}
+.scrollButton {
+  position: fixed;
+  height: 60px;
+  width: 96px;
+  background: #f8c045;
+  border-radius: 50%;
+  /* transform: translate(50%, 50%); */
+  top: 50%;
+  right: 5px;
+  color: #173f0f;
+  font-weight: bold;
+  box-shadow: rgba(0, 0, 0, 0.09) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px,
+    rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px,
+    rgba(0, 0, 0, 0.09) 0px 32px 16px;
+  opacity: 0.4;
+  white-space: nowrap;
+}
+.scrollButton:hover {
+  opacity: 1;
+  cursor: pointer;
+  transform: translateY(2px);
 }
