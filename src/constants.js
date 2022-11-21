@@ -1,3 +1,7 @@
+export const sentenceVoice = { lang: 'en-GB', voice: 'Serena', label: 'en-GB - Serena' };
+export const translationVoice = { lang: 'de-DE', voice: 'Anna', label: 'de-DE - Anna' };
+export const translationVoice2 = { lang: 'de-DE', voice: 'Yannick', label: 'de-DE - Yannick' };
+
 export const mockData = [
   {
     sentence: 'You can do that!',

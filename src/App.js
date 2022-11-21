@@ -12,7 +12,12 @@ import SpeedSlider from './modules/Components/SpeedSlider';
 import { defaultPlatformVoice } from './Utility/useful';
 import logoImage from './Icons/Logo.png';
 import { Pause as pauseIcon, Play as playIcon, Upload, Wave } from './Icons';
-import { mockData } from './constants';
+import {
+  mockData,
+  sentenceVoice as defaultSentenceVoice,
+  translationVoice as defaultTranslationVoice,
+  translationVoice2 as defaultTranslationVoice2,
+} from './constants';
 import './App.scss';
 //   Imports end
 //======================================================
@@ -24,24 +29,25 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    let sentenceSpeed = JSON.parse(storage?.getItem('sentenceSpeed')) ?? '';
-    let sentenceVoice = JSON.parse(storage?.getItem('sentenceVoice')) ?? '';
-    let translationSpeed = JSON.parse(storage?.getItem('translationSpeed')) ?? '';
-    let translationVoice = JSON.parse(storage?.getItem('translationVoice')) ?? '';
-    let data = JSON.parse(storage?.getItem('file')) ?? [];
+    let sentenceSpeed = JSON.parse(storage?.getItem('sentenceSpeed')) ?? 1.2;
+    let sentenceVoice = JSON.parse(storage?.getItem('sentenceVoice')) ?? defaultSentenceVoice;
+    let translationSpeed = JSON.parse(storage?.getItem('translationSpeed')) ?? 1.2;
+    let translationVoice =
+      JSON.parse(storage?.getItem('translationVoice')) ?? defaultTranslationVoice;
+    let translationVoice2 =
+      JSON.parse(storage?.getItem('translationVoice2')) ?? defaultTranslationVoice2;
+    let data = JSON.parse(storage?.getItem('file')) ?? mockData;
 
     this.state = {
-      data: data.length ? data : mockData,
-      localName: null,
-      largeText: !false,
-      // =========
+      data: data,
       voiceList: [],
-      sentenceSpeed: sentenceSpeed ?? 1.3,
-      sentenceVoice: sentenceVoice ?? {},
-      translationSpeed: translationSpeed ?? 1.3,
-      translationVoice: translationVoice ?? {},
+      sentenceSpeed: sentenceSpeed,
+      sentenceVoice: sentenceVoice,
+      translationSpeed: translationSpeed,
+      translationVoice: translationVoice,
+      translationVoice2: translationVoice2,
       currentPosition: 0,
-      isNewGroup: true,
+      isNewGroup: 1,
       shouldSpeak: true,
       isPlaying: false,
       scroll: true,
@@ -55,7 +61,6 @@ class App extends Component {
 
   componentDidMount() {
     this.allSentences = [...document.querySelectorAll('[class^="orator-"]')];
-    // console.log(this.allSentences);
     const defaultSpeed = 1.0;
 
     this.utterance = this.speech.init({
@@ -131,6 +136,7 @@ class App extends Component {
       sentenceSpeed,
       translationVoice,
       translationSpeed,
+      translationVoice2,
       scroll,
       shouldSpeak,
     } = this.state;
@@ -143,18 +149,31 @@ class App extends Component {
       currentGroup.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
 
     currentGroup.classList.add('activeGroupHighlightStyle');
-    if (isNewGroup) {
-      sentence.classList.add('highlightStyle');
-      text = sentence.textContent.trim();
-      this.speech.setVoice(sentenceVoice.voice);
-      this.speech.setLanguage(sentenceVoice.lang);
-      this.speech.setRate(sentenceSpeed);
-    } else {
-      translation.classList.add('highlightStyle');
-      text = translation.textContent.trim();
-      this.speech.setVoice(translationVoice.voice);
-      this.speech.setLanguage(translationVoice.lang);
-      this.speech.setRate(translationSpeed);
+    switch (isNewGroup) {
+      case 1:
+        sentence.classList.add('highlightStyle');
+        text = sentence.textContent.trim();
+        this.speech.setVoice(sentenceVoice.voice);
+        this.speech.setLanguage(sentenceVoice.lang);
+        this.speech.setRate(sentenceSpeed);
+        break;
+      case 2:
+        translation.classList.add('highlightStyle');
+        text = translation.textContent.trim();
+        this.speech.setVoice(translationVoice.voice);
+        this.speech.setLanguage(translationVoice.lang);
+        this.speech.setRate(translationSpeed);
+        break;
+      case 3:
+        translation.classList.add('highlightStyle');
+        text = translation.textContent.trim();
+        this.speech.setVoice(translationVoice2.voice);
+        this.speech.setLanguage(translationVoice2.lang);
+        this.speech.setRate(translationSpeed);
+        break;
+
+      default:
+        break;
     }
 
     if (!text) text = 'There is nothing to read!';
@@ -170,32 +189,34 @@ class App extends Component {
           onend: () => {
             if (this.speech.speaking() || this.speech.pending()) return;
             // console.log('🚀 ==> End');
-            if (isNewGroup) {
-              this.setState(
-                (state, props) => {
-                  return {
-                    isNewGroup: false,
-                  };
-                },
-                () => {
+            switch (isNewGroup) {
+              case 1:
+                this.setState({ isNewGroup: 2 }, () => {
                   sentence.classList.remove('highlightStyle');
                   this.speak();
-                }
-              );
-            } else {
-              this.setState(
-                (state, props) => {
-                  return {
-                    currentPosition: state.currentPosition + 1,
-                    isNewGroup: true,
-                  };
-                },
-                () => {
-                  currentGroup.classList.remove('activeGroupHighlightStyle');
-                  translation.classList.remove('highlightStyle');
-                  this.speak();
-                }
-              );
+                });
+                break;
+              case 2:
+                this.setState({ isNewGroup: 3 }, () => this.speak());
+                break;
+              case 3:
+                this.setState(
+                  (state, props) => {
+                    return {
+                      currentPosition: state.currentPosition + 1,
+                      isNewGroup: 1,
+                    };
+                  },
+                  () => {
+                    currentGroup.classList.remove('activeGroupHighlightStyle');
+                    translation.classList.remove('highlightStyle');
+                    this.speak();
+                  }
+                );
+                break;
+
+              default:
+                break;
             }
           },
           onresume: () => {
@@ -266,6 +287,24 @@ class App extends Component {
         this.speech.cancel();
         const voice = JSON.stringify(this.state.translationVoice);
         storage && storage.setItem(`translationVoice`, voice);
+      }
+    );
+  };
+  handleTranslationVoiceChange2 = (translationVoice) => {
+    this.setState(
+      {
+        translationVoice2: {
+          lang: translationVoice.lang,
+          voice: translationVoice.voice,
+          label: translationVoice.label,
+        },
+      },
+      () => {
+        this.speech.setVoice(this.state.translationVoice2.voice);
+        this.speech.setLanguage(this.state.translationVoice2.lang);
+        this.speech.cancel();
+        const voice = JSON.stringify(this.state.translationVoice2);
+        storage && storage.setItem(`translationVoice2`, voice);
       }
     );
   };
@@ -373,6 +412,15 @@ class App extends Component {
                       label: `${this.state.translationVoice.lang} - ${this.state.translationVoice.voice}`,
                     }}
                     onChange={this.handleTranslationVoiceChange}
+                    options={this.state.voiceList}
+                  />
+                  <Select
+                    className="control-voice"
+                    value={{
+                      value: this.state.translationVoice2.voice,
+                      label: `${this.state.translationVoice2.lang} - ${this.state.translationVoice2.voice}`,
+                    }}
+                    onChange={this.handleTranslationVoiceChange2}
                     options={this.state.voiceList}
                   />
                   {/* <div>Translation</div> */}
