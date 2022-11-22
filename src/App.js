@@ -371,12 +371,34 @@ class App extends Component {
     jsonValue = Object.entries(jsonValue)
       .map(([key, value]) => value)
       .flat()
-      .map(({ text, translation }) => {
-        return { sentence: translation, translation: text, id: uuid() };
+      .map((item) => {
+        let Translation = '';
+        let Subtitle = '';
+        if (!item?.Translation || !item?.Subtitle) {
+          Translation = item?.translation;
+          Subtitle = item?.text;
+        } else {
+          Translation = item?.Translation;
+          Subtitle = item?.Subtitle;
+        }
+        return {
+          sentence: Translation.replace(/\[\w+\s*\w+?\]/g, '') /* [Sarah] or [John B] */,
+          translation: Subtitle,
+          id: uuid(),
+        };
       });
 
-    // console.log(file);
-    // console.log(JSON.stringify(jsonValue));
+    //   .map(({ Translation, Subtitle }) => {
+    //     if (!Translation || !Subtitle) {
+    //       throw Error('correct format = {Translation:"bla blah blah", Subtitle:"yah yah yah"}');
+    //     }
+    //     return {
+    //       sentence: Translation.replace(/\[\w+\s*\w+?\]/g, '') /* [Sarah] or [John B] */,
+    //       translation: Subtitle,
+    //       id: uuid(),
+    //     };
+    //   });
+
     this.setState(
       {
         data: jsonValue,
