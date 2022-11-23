@@ -2,7 +2,7 @@
   "name": "Language Study",
   "version": "0.1.0",
   "description": "An app for studying Language",
-  "homepage": "https://gerhardsletten.github.io/react-reader",
+  "homepage": "https://lordkaybanks.github.io/language-study-app--sentence-reader",
   "main": "lib/index.js",
   "scripts": {
     "compile": "NODE_ENV=production babel --out-dir lib src/modules",
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gerhardsletten/react-reader.git"
+    "url": "git+https://github.com/{username}/{repo}.git"
   },
   "author": "Kayode Ogidan",
   "license": "ISC",
