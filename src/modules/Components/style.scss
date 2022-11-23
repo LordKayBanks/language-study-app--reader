@@ -1,14 +1,11 @@
 .slider-container {
-  width: 260px;
   margin-bottom: 6px;
 }
 .slider-label {
   text-align: center;
   color: black;
   font-size: 15px;
-  @media screen and (max-width: 786px) {
-    display: none;
-  }
+  font-weight: 450;
 }
 
 .rc-slider-track {

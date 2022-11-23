@@ -20,7 +20,7 @@ export const GlobalStyle = createGlobalStyle`
     min-height: 100vh;
     font-size: 1.8rem;
     background: #333;
-    position: absolute;
+    /* position: absolute; */
     height: 100%;
     width: 100%;
     color: #fff;

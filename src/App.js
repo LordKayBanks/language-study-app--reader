@@ -5,8 +5,6 @@ import FileReaderInput from 'react-file-reader-input';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 
-import Navigator from './Utility/Navigator';
-import { GlobalStyle } from './Components';
 import SpeedSlider from './modules/Components/SpeedSlider';
 
 import { defaultPlatformVoice } from './Utility/useful';
@@ -51,6 +49,7 @@ class App extends Component {
       shouldSpeak: true,
       isPlaying: false,
       scroll: true,
+      showPlaybackPanel: false,
     };
     this.speech = new Speech(); // will throw an exception if not browser supported
     if (this.speech.hasBrowserSupport()) {
@@ -110,7 +109,7 @@ class App extends Component {
     });
   }
   componentWillUnmount() {
-    // document.removeEventListener("keydown", this.handleKeyPress, false);
+    // document.removeEventListener('scroll', this.handleScroll, false);
   }
 
   play = () => {
@@ -268,7 +267,7 @@ class App extends Component {
       this.setState(
         {
           currentPosition: currentPosition >= 1 ? currentPosition - 1 : 0,
-          isNewGroup: true,
+          isNewGroup: 1,
         } /*, () => console.log(currentPosition)*/
       );
     }
@@ -357,8 +356,15 @@ class App extends Component {
   // =======================================
   // =======================================
 
-  handleScroll = () => {
+  togglePlaybackPanel = () => {
+    this.setState({ showPlaybackPanel: !this.state.showPlaybackPanel });
+  };
+  toggleScrolling = () => {
     this.setState({ scroll: !this.state.scroll });
+  };
+  handleScrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.setState({ scroll: false });
   };
   handleFileChange = (event, results) => {
     if (!results.length) return;
@@ -416,57 +422,64 @@ class App extends Component {
     return (
       <>
         <div className="container">
-          <GlobalStyle customeFontSize={this.bigFont} />
-          <header className="bar">
-            <div className="logo-wrapper">
-              <img className="logo" src={logoImage} alt="Orator Ebook Reader" />
-            </div>
-
-            <div className="control-wrapper">
-              <div className="control">
-                <div className="voice-group">
-                  <SpeedSlider
-                    defaultSpeed={this.state.sentenceSpeed}
-                    handleSpeedChange={this.handleSentenceSpeedChange}
-                  ></SpeedSlider>
-                  <Select
-                    className="control-voice"
-                    value={{
-                      value: this.state.sentenceVoice.voice,
-                      label: `${this.state.sentenceVoice.lang} - ${this.state.sentenceVoice.voice}`,
-                      //   label: `${this.state.sentenceVoice.voice || 'Select voice'}`,
-                    }}
-                    onChange={this.handleSentenceVoiceChange}
-                    options={this.state.voiceList}
-                  />
-                  {/* <div>Sentence</div> */}
+          <section>
+            <header
+              className={`${this.state.showPlaybackPanel ? 'hide-playback-buttons' : ''} bar`}
+            >
+              <div className="logo-wrapper">
+                <img className="logo" src={logoImage} alt="Orator - Sentence Memorizer" />
+              </div>
+              <div className="control-wrapper">
+                <div className="control">
+                  <div className="voice-group">
+                    <SpeedSlider
+                      label="Sentence"
+                      defaultSpeed={this.state.sentenceSpeed}
+                      handleSpeedChange={this.handleSentenceSpeedChange}
+                    ></SpeedSlider>
+                    <Select
+                      className="control-voice"
+                      value={{
+                        value: this.state.sentenceVoice.voice,
+                        label: `${this.state.sentenceVoice.lang} - ${this.state.sentenceVoice.voice}`,
+                        //   label: `${this.state.sentenceVoice.voice || 'Select voice'}`,
+                      }}
+                      onChange={this.handleSentenceVoiceChange}
+                      options={this.state.voiceList}
+                    />
+                  </div>
+                  <div className="voice-group">
+                    <SpeedSlider
+                      label="Translation"
+                      defaultSpeed={this.state.translationSpeed}
+                      handleSpeedChange={this.handleTranslationSpeedChange}
+                    ></SpeedSlider>
+                    <Select
+                      className="control-voice"
+                      value={{
+                        value: this.state.translationVoice.voice,
+                        label: `${this.state.translationVoice.lang} - ${this.state.translationVoice.voice}`,
+                      }}
+                      onChange={this.handleTranslationVoiceChange}
+                      options={this.state.voiceList}
+                    />
+                    <Select
+                      className="control-voice"
+                      value={{
+                        value: this.state.translationVoice2.voice,
+                        label: `${this.state.translationVoice2.lang} - ${this.state.translationVoice2.voice}`,
+                      }}
+                      onChange={this.handleTranslationVoiceChange2}
+                      options={this.state.voiceList}
+                    />
+                  </div>
                 </div>
-                <div className="voice-group">
-                  <SpeedSlider
-                    defaultSpeed={this.state.translationSpeed}
-                    handleSpeedChange={this.handleTranslationSpeedChange}
-                  ></SpeedSlider>
-                  <Select
-                    className="control-voice"
-                    value={{
-                      value: this.state.translationVoice.voice,
-                      label: `${this.state.translationVoice.lang} - ${this.state.translationVoice.voice}`,
-                    }}
-                    onChange={this.handleTranslationVoiceChange}
-                    options={this.state.voiceList}
-                  />
-                  <Select
-                    className="control-voice"
-                    value={{
-                      value: this.state.translationVoice2.voice,
-                      label: `${this.state.translationVoice2.lang} - ${this.state.translationVoice2.voice}`,
-                    }}
-                    onChange={this.handleTranslationVoiceChange2}
-                    options={this.state.voiceList}
-                  />
-                  {/* <div>Translation</div> */}
-                </div>
-                <div>
+                <div className="file-reader__wrapper">
+                  <div className="file-reader">
+                    <FileReaderInput as="buffer" onChange={this.handleFileChange}>
+                      <img src={Upload} className="Upload-button" alt="Upload json or CSV file" />
+                    </FileReaderInput>
+                  </div>
                   <button className="playback-button" onClick={this.play}>
                     <img
                       src={this.state.shouldSpeak && this.state.isPlaying ? pauseIcon : playIcon}
@@ -474,39 +487,37 @@ class App extends Component {
                     ></img>
                   </button>
                 </div>
-                <div className="file-reader">
-                  <FileReaderInput as="buffer" onChange={this.handleFileChange}>
-                    <img src={Upload} className="Upload-button" alt="Upload json or CSV file" />
-                  </FileReaderInput>
-                </div>
               </div>
-            </div>
-          </header>
-          <ol style={{ marginTop: '55px' }}>
-            {data.map(({ translation, sentence, id }, index) => {
-              return (
-                <li
-                  className={`orator-${index}`}
-                  key={id}
-                  onClick={this.handleDoubleClick}
-                  style={group_style}
-                >
-                  <div className="sentence" style={sentence_style}>
-                    {sentence}
-                  </div>
-                  <div className="translation" style={translation_style}>
-                    {translation}
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
+            </header>
+            <ol style={{ marginTop: this.state.showPlaybackPanel ? '260px' : '0px' }}>
+              {data.map(({ translation, sentence, id }, index) => {
+                return (
+                  <li
+                    className={`orator-${index} group_style`}
+                    key={id}
+                    onClick={this.handleDoubleClick}
+                  >
+                    <div className="sentence sentence_style">{sentence}</div>
+                    <div className="translation translation_style">{translation}</div>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        </div>
+        <div className="button-group">
+          <button className="settingsButton" onClick={this.togglePlaybackPanel}>
+            {this.state.showPlaybackPanel ? 'Hide Panel' : 'Show Panel'}
+          </button>
           <button
             className="scrollButton"
-            onClick={this.handleScroll}
+            onClick={this.toggleScrolling}
             style={{ background: this.state.scroll ? 'green' : 'red' }}
           >
             {this.state.scroll ? 'Scroll' : 'No Scroll'}
+          </button>
+          <button className="scroll-to-top" onClick={this.handleScrollToTop}>
+            Scroll To Top
           </button>
         </div>
       </>
@@ -515,21 +526,3 @@ class App extends Component {
 }
 
 export default App;
-const group_style = {
-  background: '#3a3233',
-  padding: '5px 10px',
-  marginBottom: '10px',
-  borderRadius: '5px',
-  //   display: 'flex',
-  //   flexDirection: 'column',
-};
-const sentence_style = {
-  color: 'deeppink',
-  fontSize: '16px',
-  //   display: 'inline',
-};
-const translation_style = {
-  color: 'lime',
-  fontSize: '20px',
-  //   display: 'inline',
-};

@@ -1,30 +1,31 @@
 {
-  "name": "react-reader",
-  "version": "0.18.2",
-  "description": "A epub-reader for React powered by ePubJS",
+  "name": "Language Study",
+  "version": "0.1.0",
+  "description": "An app for studying Language",
+  "homepage": "https://gerhardsletten.github.io/react-reader",
   "main": "lib/index.js",
   "scripts": {
     "compile": "NODE_ENV=production babel --out-dir lib src/modules",
     "prepare": "npm run compile",
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "deploy": "gh-pages-deploy",
+    "deploy": "gh-pages -d build",
     "clean-source": "rimraf lib src public .babelrc .eslintrc .npmignore package.json README.md",
-    "test": "eslint -c .eslintrc src"
+    "test": "eslint -c .eslintrc src",
+    "predeploy": "npm run build"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gerhardsletten/react-reader.git"
   },
-  "author": "Eyvind Gerhard Sletten",
+  "author": "Kayode Ogidan",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/gerhardsletten/react-reader/issues"
+    "url": "https://github.com/{name}/{branch-name}/issues"
   },
   "standard": {
     "parser": "babel-eslint"
   },
-  "homepage": "https://gerhardsletten.github.io/react-reader",
   "devDependencies": {
     "@babel/cli": "^7.7.5",
     "@babel/core": "^7.7.5",
@@ -32,6 +33,7 @@
     "@babel/plugin-proposal-object-rest-spread": "^7.7.4",
     "@babel/preset-env": "^7.7.6",
     "@babel/preset-react": "^7.7.4",
+    "gh-pages": "^4.0.0",
     "gh-pages-deploy": "^0.5.1",
     "husky": "^3.1.0",
     "prettier": "^1.19.1",
@@ -81,4 +83,3 @@
     "not op_mini all"
   ]
 }
-

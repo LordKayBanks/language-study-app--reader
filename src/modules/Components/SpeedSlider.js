@@ -1,12 +1,12 @@
-import "rc-slider/assets/index.css";
-import "rc-tooltip/assets/bootstrap.css";
-import React from "react";
-import Tooltip from "rc-tooltip";
-import Slider from "rc-slider";
-import "./style.scss";
+import 'rc-slider/assets/index.css';
+import 'rc-tooltip/assets/bootstrap.css';
+import React from 'react';
+import Tooltip from 'rc-tooltip';
+import Slider from 'rc-slider';
+import './style.scss';
 
 const Handle = Slider.Handle;
-const handle = props => {
+const handle = (props) => {
   const { value, dragging, index, ...restProps } = props;
   return (
     <Tooltip
@@ -21,10 +21,10 @@ const handle = props => {
   );
 };
 
-const SpeedSlider = ({ handleSpeedChange, defaultSpeed }) => {
+const SpeedSlider = ({ handleSpeedChange, defaultSpeed, label }) => {
   return (
     <div className="slider-container">
-      <p className="slider-label">Speed</p>
+      <p className="slider-label">{label}</p>
       <Slider
         min={0.5}
         max={2.0}
