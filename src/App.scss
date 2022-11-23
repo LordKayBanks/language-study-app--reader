@@ -21,6 +21,30 @@ body {
   background: #928a8a;
 }
 
+ol {
+  list-style: none;
+  counter-reset: item;
+  //   list-style-type: decimal-leading-zero;
+}
+li {
+  counter-increment: item;
+  margin-bottom: 5px;
+}
+li:before {
+  margin-right: 10px;
+  content: counter(item);
+  background: #9ca0a2;
+  padding: 4px 6px;
+  border-radius: 11px;
+  color: #000;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+  align-self: center;
+  white-space: nowrap;
+  opacity: 0.5;
+}
+
 // ================================================================
 // ================================================================
 
@@ -32,6 +56,14 @@ body {
   justify-content: center;
 
   & section {
+    & ol {
+      margin-top: 10px;
+
+      & li {
+        display: flex;
+      }
+    }
+
     padding: 10px 40px;
     overflow-x: clip;
     @media screen and (max-width: 460px) {
@@ -49,27 +81,6 @@ body {
   // background: linear-gradient(90deg, #ffffff 5%, #faf6f8 18%, #d3d8dd 49%, #91929c 90%);
 }
 
-.hide-playback-buttons {
-  position: fixed;
-  z-index: 20;
-  left: 50%;
-  transform: translateX(-50%) scale(1.1);
-  background: linear-gradient(90deg, #ffffff 5%, #faf6f8 18%, #d3d8dd 49%, #91929c 90%) !important;
-
-  & .file-reader__wrapper {
-    margin-top: 10px;
-    justify-content: flex-end;
-    position: relative;
-    top: -50px;
-    left: 20px;
-
-    & .file-reader {
-      margin-left: 25px;
-    }
-    & .playback-button {
-    }
-  }
-}
 .bar {
   padding: 10px;
   background: #008b8b;
@@ -318,20 +329,33 @@ body {
   transform: scale(1.05);
 }
 
-.button-group {
+.lower-panel {
   position: fixed;
-  top: 90vh;
+  //   top: 90vh;
+  top: calc(100vh - 120px); /* view height - panel height*/
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
   background: #171515;
   padding: 4px;
   border-radius: 5px;
+
+  & > div {
+    display: flex;
+    justify-content: center;
+
+    & img {
+      height: 33px;
+      width: auto;
+      transform: translateY(3px);
+    }
+  }
 }
 
 .scrollButton,
-.settingsButton,
-.scroll-to-top {
+.srsMode,
+.scroll-to-top,
+.backButton,
+.forwardButton {
   height: 40px;
   width: 100px;
   background: #f8c045;
@@ -344,23 +368,26 @@ body {
   opacity: 0.4;
   white-space: nowrap;
 }
-.settingsButton {
+.srsMode,
+.backButton,
+.forwardButton {
   background: #008b8b;
 }
 .scroll-to-top {
   background: #008b8b;
 }
 .scrollButton:hover,
-.settingsButton:hover,
-.scroll-to-top:hover {
+.srsMode:hover,
+.scroll-to-top:hover,
+.backButton:hover,
+.forwardButton:hover {
   opacity: 1;
   cursor: pointer;
   transform: translateY(2px);
 }
 
 .group_style {
-  //   background: #3a3233;
-  padding: 5px 16px;
+  padding: 5px 10px;
   margin-bottom: 10px;
   border-radius: 5px;
 }
@@ -373,6 +400,9 @@ body {
 .sentence_style {
   color: deeppink;
   font-size: 16px;
+  border-bottom: 1px solid #0e9e6e4a;
+  margin-bottom: 3px;
+  padding-bottom: 3px;
 }
 .translation_style {
   color: lime;

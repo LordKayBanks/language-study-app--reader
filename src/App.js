@@ -7,9 +7,15 @@ import { v4 as uuid } from 'uuid';
 
 import SpeedSlider from './modules/Components/SpeedSlider';
 
-import { defaultPlatformVoice } from './Utility/useful';
 import logoImage from './Icons/Logo.png';
-import { Pause as pauseIcon, Play as playIcon, Upload, Wave } from './Icons';
+import {
+  Pause as pauseIcon,
+  Play as playIcon,
+  Upload as UploadIcon,
+  Back as BackIcon,
+  Forward as ForwardIcon,
+} from './Icons';
+import { chunkArrayInGroups, defaultPlatformVoice, srsMode_1, srsMode_2 } from './Utility/useful';
 import {
   mockData,
   sentenceVoice as defaultSentenceVoice,
@@ -24,20 +30,23 @@ class App extends Component {
   currentGroup = null;
   sentence = null;
   translation = null;
+  itemsPerPage = 50;
+  srsMode = { mode1: 'mode1', mode2: 'mode2', default: 'default' };
+
   constructor(props) {
     super(props);
 
-    let sentenceSpeed = JSON.parse(storage?.getItem('sentenceSpeed')) ?? 1.2;
-    let sentenceVoice = JSON.parse(storage?.getItem('sentenceVoice')) ?? defaultSentenceVoice;
-    let translationSpeed = JSON.parse(storage?.getItem('translationSpeed')) ?? 1.2;
-    let translationVoice =
-      JSON.parse(storage?.getItem('translationVoice')) ?? defaultTranslationVoice;
-    let translationVoice2 =
-      JSON.parse(storage?.getItem('translationVoice2')) ?? defaultTranslationVoice2;
-    let data = JSON.parse(storage?.getItem('file')) ?? mockData;
+    const storedState = JSON.parse(storage?.getItem('state')) ?? {};
+    let sentenceSpeed = storedState?.sentenceSpeed ?? 1.2;
+    let sentenceVoice = storedState?.sentenceVoice ?? defaultSentenceVoice;
+    let translationSpeed = storedState?.translationSpeed ?? 1.2;
+    let translationVoice = storedState?.translationVoice ?? defaultTranslationVoice;
+    let translationVoice2 = storedState?.translationVoice2 ?? defaultTranslationVoice2;
+    let data = storedState?.data ?? [mockData];
 
     this.state = {
       data: data,
+      sortedData: [],
       voiceList: [],
       sentenceSpeed: sentenceSpeed,
       sentenceVoice: sentenceVoice,
@@ -48,8 +57,9 @@ class App extends Component {
       isNewGroup: 1,
       shouldSpeak: true,
       isPlaying: false,
+      currentPage: 0,
       scroll: true,
-      showPlaybackPanel: false,
+      srsMode: this.srsMode.default,
     };
     this.speech = new Speech(); // will throw an exception if not browser supported
     if (this.speech.hasBrowserSupport()) {
@@ -59,9 +69,9 @@ class App extends Component {
   }
 
   componentDidMount() {
-    this.allSentences = [...document.querySelectorAll('[class^="orator-"]')];
-    const defaultSpeed = 1.0;
+    this.updateReferenceToDOMSentenceElements();
 
+    const defaultSpeed = 1.0;
     this.utterance = this.speech.init({
       lang: this.state.sentenceVoice.lang || defaultPlatformVoice.lang,
       voice: this.state.sentenceVoice.voice || defaultPlatformVoice.voice,
@@ -103,7 +113,7 @@ class App extends Component {
             sortedVoices = [...preferredVoices, ...otherVoices];
           }
 
-          this.setState({ voiceList: sortedVoices } /*, () => console.log(sortedVoices)*/);
+          this.setState({ voiceList: sortedVoices }, () => this.persistState());
         },
       },
     });
@@ -112,6 +122,19 @@ class App extends Component {
     // document.removeEventListener('scroll', this.handleScroll, false);
   }
 
+  persistState = () => {
+    const state = JSON.stringify(this.state);
+    storage && storage.setItem(`state`, state);
+  };
+
+  updateReferenceToDOMSentenceElements = () =>
+    (this.allSentences = [...document.querySelectorAll('[class^="orator-"]')]);
+
+  cleanUpHighlights() {
+    this.sentence.classList.remove('highlightStyle');
+    this.translation.classList.remove('highlightStyle');
+    this.currentGroup.classList.remove('activeGroupHighlightStyle');
+  }
   play = () => {
     if (this.state.shouldSpeak && !this.state.isPlaying) {
       //start position
@@ -126,12 +149,6 @@ class App extends Component {
       return this.setState({ shouldSpeak: true, isPlaying: true }, () => this.speak());
     }
   };
-
-  cleanUpHighlights() {
-    this.sentence.classList.remove('highlightStyle');
-    this.translation.classList.remove('highlightStyle');
-    this.currentGroup.classList.remove('activeGroupHighlightStyle');
-  }
   speak = () => {
     const {
       currentPosition,
@@ -148,7 +165,7 @@ class App extends Component {
 
     let text = '';
     const currentGroup = this.allSentences[currentPosition];
-    const [sentence, translation] = currentGroup?.querySelectorAll('div');
+    const [sentence, translation] = currentGroup?.querySelectorAll('p');
     this.currentGroup = currentGroup;
     this.sentence = sentence;
     this.translation = translation;
@@ -285,8 +302,7 @@ class App extends Component {
         this.speech.setVoice(this.state.sentenceVoice.voice);
         this.speech.setLanguage(this.state.sentenceVoice.lang);
         this.speech.cancel();
-        const voice = JSON.stringify(this.state.sentenceVoice);
-        storage && storage.setItem(`sentenceVoice`, voice);
+        this.persistState();
       }
     );
   };
@@ -303,8 +319,7 @@ class App extends Component {
         this.speech.setVoice(this.state.translationVoice.voice);
         this.speech.setLanguage(this.state.translationVoice.lang);
         this.speech.cancel();
-        const voice = JSON.stringify(this.state.translationVoice);
-        storage && storage.setItem(`translationVoice`, voice);
+        this.persistState();
       }
     );
   };
@@ -321,8 +336,7 @@ class App extends Component {
         this.speech.setVoice(this.state.translationVoice2.voice);
         this.speech.setLanguage(this.state.translationVoice2.lang);
         this.speech.cancel();
-        const voice = JSON.stringify(this.state.translationVoice2);
-        storage && storage.setItem(`translationVoice2`, voice);
+        this.persistState();
       }
     );
   };
@@ -335,8 +349,7 @@ class App extends Component {
       },
       () => {
         this.speech.setRate(this.state.sentenceSpeed);
-        const value = JSON.stringify(this.state.sentenceSpeed);
-        storage && storage.setItem(`sentenceSpeed`, value);
+        this.persistState();
       }
     );
   };
@@ -348,16 +361,48 @@ class App extends Component {
       },
       () => {
         this.speech.setRate(this.state.translationSpeed);
-        const value = JSON.stringify(this.state.translationSpeed);
-        storage && storage.setItem(`translationSpeed`, value);
+        this.persistState();
       }
     );
   };
   // =======================================
   // =======================================
 
-  togglePlaybackPanel = () => {
-    this.setState({ showPlaybackPanel: !this.state.showPlaybackPanel });
+  toggleSRSMode = () => {
+    const { currentPage, data } = this.state;
+    let srsMode = this.srsMode.mode1;
+    switch (this.state.srsMode) {
+      case this.srsMode.default:
+        srsMode = this.srsMode.mode1;
+        this.setState({
+          srsMode,
+          sortedData: srsMode_1(data[currentPage]),
+          currentPage: 0,
+          currentPosition: 0,
+        });
+        break;
+      case this.srsMode.mode1:
+        srsMode = this.srsMode.mode2;
+        this.setState({
+          srsMode,
+          sortedData: srsMode_2(data[currentPage]),
+          currentPage: 0,
+          currentPosition: 0,
+        });
+        break;
+      case this.srsMode.mode2:
+        srsMode = this.srsMode.default;
+        this.setState({
+          srsMode,
+          sortedData: data[currentPage],
+          currentPage: 0,
+          currentPosition: 0,
+        });
+        break;
+
+      default:
+        break;
+    }
   };
   toggleScrolling = () => {
     this.setState({ scroll: !this.state.scroll });
@@ -365,6 +410,31 @@ class App extends Component {
   handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.setState({ scroll: false });
+  };
+
+  handlePreviousPage = () => {
+    this.setState(
+      ({ currentPage }) => {
+        return { currentPage: Math.max(currentPage - 1, 0), currentPosition: 0 };
+      },
+      () => {
+        this.updateReferenceToDOMSentenceElements();
+        this.persistState();
+        this.handleScrollToTop();
+      }
+    );
+  };
+  handleNextPage = () => {
+    this.setState(
+      ({ currentPage, data }) => {
+        return { currentPage: Math.min(currentPage + 1, data.length - 1), currentPosition: 0 };
+      },
+      () => {
+        this.updateReferenceToDOMSentenceElements();
+        this.persistState();
+        this.handleScrollToTop();
+      }
+    );
   };
   handleFileChange = (event, results) => {
     if (!results.length) return;
@@ -375,7 +445,11 @@ class App extends Component {
     }
     let jsonValue = JSON.parse(new TextDecoder().decode(e.target.result));
     jsonValue = Object.entries(jsonValue)
-      .map(([key, value]) => value)
+      .map(([key, value]) => {
+        return value.map((value) => {
+          return { ...value, word: key };
+        });
+      })
       .flat()
       .map((item) => {
         let Translation = '';
@@ -388,6 +462,7 @@ class App extends Component {
           Subtitle = item?.Subtitle;
         }
         return {
+          word: item?.word ?? '',
           sentence: Translation.replace(/\[\w+\s*\w+?\]/g, '') /* [Sarah] or [John B] */,
           translation: Subtitle,
           id: uuid(),
@@ -405,27 +480,28 @@ class App extends Component {
     //     };
     //   });
 
+    jsonValue = chunkArrayInGroups(jsonValue, this.itemsPerPage);
     this.setState(
       {
         data: jsonValue,
         currentPosition: 0,
       },
       () => {
-        localStorage.setItem('file', JSON.stringify(jsonValue));
-        this.allSentences = [...document.querySelectorAll('[class^="orator-"]')];
+        this.updateReferenceToDOMSentenceElements();
+        this.persistState();
       }
     );
   };
 
   render() {
-    const { data } = this.state;
+    let { data, sortedData, currentPage } = this.state;
+    sortedData = data[currentPage];
+
     return (
       <>
         <div className="container">
           <section>
-            <header
-              className={`${this.state.showPlaybackPanel ? 'hide-playback-buttons' : ''} bar`}
-            >
+            <header className="bar">
               <div className="logo-wrapper">
                 <img className="logo" src={logoImage} alt="Orator - Sentence Memorizer" />
               </div>
@@ -442,7 +518,6 @@ class App extends Component {
                       value={{
                         value: this.state.sentenceVoice.voice,
                         label: `${this.state.sentenceVoice.lang} - ${this.state.sentenceVoice.voice}`,
-                        //   label: `${this.state.sentenceVoice.voice || 'Select voice'}`,
                       }}
                       onChange={this.handleSentenceVoiceChange}
                       options={this.state.voiceList}
@@ -477,7 +552,11 @@ class App extends Component {
                 <div className="file-reader__wrapper">
                   <div className="file-reader">
                     <FileReaderInput as="buffer" onChange={this.handleFileChange}>
-                      <img src={Upload} className="Upload-button" alt="Upload json or CSV file" />
+                      <img
+                        src={UploadIcon}
+                        className="Upload-button"
+                        alt="Upload json or CSV file"
+                      />
                     </FileReaderInput>
                   </div>
                   <button className="playback-button" onClick={this.play}>
@@ -489,36 +568,66 @@ class App extends Component {
                 </div>
               </div>
             </header>
-            <ol style={{ marginTop: this.state.showPlaybackPanel ? '260px' : '0px' }}>
-              {data.map(({ translation, sentence, id }, index) => {
+            <ol start={currentPage * this.itemsPerPage + 1}>
+              {sortedData.map(({ translation, sentence, id, word }, index) => {
                 return (
                   <li
                     className={`orator-${index} group_style`}
                     key={id}
                     onClick={this.handleDoubleClick}
                   >
-                    <div className="sentence sentence_style">{sentence}</div>
-                    <div className="translation translation_style">{translation}</div>
+                    <div className="sentence-item">
+                      <h3>{word}</h3>
+                      <p className="sentence sentence_style">{sentence}</p>
+                      <p className="translation translation_style">{translation}</p>
+                    </div>
                   </li>
                 );
               })}
             </ol>
           </section>
         </div>
-        <div className="button-group">
-          <button className="settingsButton" onClick={this.togglePlaybackPanel}>
-            {this.state.showPlaybackPanel ? 'Hide Panel' : 'Show Panel'}
-          </button>
-          <button
-            className="scrollButton"
-            onClick={this.toggleScrolling}
-            style={{ background: this.state.scroll ? 'green' : 'red' }}
-          >
-            {this.state.scroll ? 'Scroll' : 'No Scroll'}
-          </button>
-          <button className="scroll-to-top" onClick={this.handleScrollToTop}>
-            Scroll To Top
-          </button>
+        <div className="lower-panel">
+          <div>{`Page ${currentPage + 1} of ${data.length}`}</div>
+          <div>
+            <button className="backButton" onClick={this.handlePreviousPage}>
+              <img src={BackIcon} className="Upload-button" alt="Back Button" />
+            </button>
+            <button
+              className="scrollButton"
+              onClick={this.play}
+              style={{
+                background: this.state.shouldSpeak && this.state.isPlaying ? 'green' : 'red',
+              }}
+            >
+              <img
+                src={this.state.shouldSpeak && this.state.isPlaying ? pauseIcon : playIcon}
+                alt={this.state.shouldSpeak && this.state.isPlaying ? 'Pause' : 'Play'}
+              ></img>
+            </button>
+            <button className="forwardButton" onClick={this.handleNextPage}>
+              <img src={ForwardIcon} className="Upload-button" alt="Forward Button" />
+            </button>
+          </div>
+
+          {/* ================== */}
+          <div>
+            <button className="srsMode" onClick={this.toggleSRSMode}>
+              {parseInt(this.state.srsMode.match(/\d+/g))
+                ? 'Shuffle-' + parseInt(this.state.srsMode.match(/\d+/g))
+                : 'Default'}
+            </button>
+            <button
+              className="scrollButton"
+              onClick={this.toggleScrolling}
+              style={{ background: this.state.scroll ? 'green' : 'red' }}
+            >
+              {this.state.scroll ? 'Scroll' : 'No Scroll'}
+            </button>
+            <button className="scroll-to-top" onClick={this.handleScrollToTop}>
+              Scroll To Top
+            </button>
+          </div>
         </div>
       </>
     );
