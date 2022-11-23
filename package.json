@@ -2,7 +2,7 @@
   "name": "Language Study",
   "version": "0.1.1",
   "description": "An app for studying Language",
-  "homepage": "https://lordkaybanks.github.io/language-study-app--sentence-reader",
+  "homepage": "https://lordkaybanks.github.io/language-study-app--reader",
   "main": "lib/index.js",
   "scripts": {
     "compile": "NODE_ENV=production babel --out-dir lib src/modules",
