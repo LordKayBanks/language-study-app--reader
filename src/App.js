@@ -53,7 +53,8 @@ class App extends Component {
       translationSpeed: translationSpeed,
       translationVoice: translationVoice,
       translationVoice2: translationVoice2,
-      currentPosition: 0,
+      currentPosition_defaultMode: 0,
+      currentPosition_otherModes: 0,
       isNewGroup: 1,
       shouldSpeak: true,
       isPlaying: false,
@@ -151,7 +152,7 @@ class App extends Component {
   };
   speak = () => {
     const {
-      currentPosition,
+      currentPosition_defaultMode,
       isNewGroup,
       sentenceVoice,
       sentenceSpeed,
@@ -164,7 +165,7 @@ class App extends Component {
     if (!shouldSpeak) return;
 
     let text = '';
-    const currentGroup = this.allSentences[currentPosition];
+    const currentGroup = this.allSentences[currentPosition_defaultMode];
     const [sentence, translation] = currentGroup?.querySelectorAll('p');
     this.currentGroup = currentGroup;
     this.sentence = sentence;
@@ -224,25 +225,67 @@ class App extends Component {
                 this.setState({ isNewGroup: 3 }, () => this.speak());
                 break;
               case 3:
-                //if this is the last group
-                if (this.state.currentPosition >= this.allSentences.length - 1) {
+                // ===================================================
+                // ===================================================
+                if (
+                  this.state.srsMode === this.srsMode.default &&
+                  this.state.currentPosition_defaultMode >= this.allSentences.length - 1
+                ) {
+                  //if this is the last group: default SRS Mode
                   this.cleanUpHighlights();
-                  return this.setState({ shouldSpeak: true, isPlaying: false, currentPosition: 0 });
+                  return this.setState({
+                    shouldSpeak: true,
+                    isPlaying: false,
+                    currentPosition_defaultMode: 0,
+                  });
+                } else if (
+                  this.state.srsMode !== this.srsMode.default &&
+                  this.state.currentPosition_otherModes >= this.state.sortedData.length - 1
+                ) {
+                  //if this is the last group: other SRS Modes
+                  this.cleanUpHighlights();
+                  return this.setState({
+                    shouldSpeak: true,
+                    isPlaying: false,
+                    currentPosition_otherModes: 0,
+                  });
+                }
+                // ===================================================
+                // ===================================================
+                // debugger;
+
+                if (this.state.srsMode === this.srsMode.default) {
+                  this.setState(
+                    (state, props) => {
+                      return {
+                        currentPosition_defaultMode: state.currentPosition_defaultMode + 1,
+                        isNewGroup: 1,
+                      };
+                    },
+                    () => {
+                      currentGroup.classList.remove('activeGroupHighlightStyle');
+                      translation.classList.remove('highlightStyle');
+                      this.speak();
+                    }
+                  );
+                } else {
+                  this.setState(
+                    (state, props) => {
+                      return {
+                        currentPosition_otherModes: state.currentPosition_otherModes + 1,
+                        currentPosition_defaultMode:
+                          state.sortedData[state.currentPosition_otherModes + 1],
+                        isNewGroup: 1,
+                      };
+                    },
+                    () => {
+                      currentGroup.classList.remove('activeGroupHighlightStyle');
+                      translation.classList.remove('highlightStyle');
+                      this.speak();
+                    }
+                  );
                 }
 
-                this.setState(
-                  (state, props) => {
-                    return {
-                      currentPosition: state.currentPosition + 1,
-                      isNewGroup: 1,
-                    };
-                  },
-                  () => {
-                    currentGroup.classList.remove('activeGroupHighlightStyle');
-                    translation.classList.remove('highlightStyle');
-                    this.speak();
-                  }
-                );
                 break;
 
               default:
@@ -277,16 +320,28 @@ class App extends Component {
   handleDoubleClick = (event) => {
     const { target, detail } = event;
     if (detail === 2) {
-      this.cleanUpHighlights();
+      if (this.currentGroup) this.cleanUpHighlights();
 
-      let currentPosition = target.parentNode.getAttribute('class');
-      currentPosition = parseInt(currentPosition.match(/\d+/g));
-      this.setState(
-        {
-          currentPosition: currentPosition >= 1 ? currentPosition - 1 : 0,
-          isNewGroup: 1,
-        } /*, () => console.log(currentPosition)*/
-      );
+      let clickedPosition = target.parentNode.parentNode.getAttribute('class');
+      clickedPosition = parseInt(clickedPosition.match(/\d+/g));
+
+      if (this.state.srsMode === this.srsMode.default)
+        return this.setState(
+          {
+            currentPosition_defaultMode: Math.max(clickedPosition, 0),
+            isNewGroup: 1,
+          } /*, () => console.log(clickedPosition)*/
+        );
+
+      let newCurrentPosition_otherModes = this.state.sortedData.findIndex((item) => {
+        return item === clickedPosition ? true : false;
+      });
+
+      this.setState({
+        currentPosition_defaultMode: Math.max(clickedPosition, 0),
+        currentPosition_otherModes: newCurrentPosition_otherModes,
+        isNewGroup: 1,
+      });
     }
   };
   handleSentenceVoiceChange = (sentenceVoice) => {
@@ -369,7 +424,9 @@ class App extends Component {
   // =======================================
 
   toggleSRSMode = () => {
+    if (this.currentGroup) this.cleanUpHighlights();
     const { currentPage, data } = this.state;
+
     let srsMode = this.srsMode.mode1;
     switch (this.state.srsMode) {
       case this.srsMode.default:
@@ -378,7 +435,7 @@ class App extends Component {
           srsMode,
           sortedData: srsMode_1(data[currentPage]),
           currentPage: 0,
-          currentPosition: 0,
+          currentPosition_defaultMode: 0,
         });
         break;
       case this.srsMode.mode1:
@@ -387,7 +444,7 @@ class App extends Component {
           srsMode,
           sortedData: srsMode_2(data[currentPage]),
           currentPage: 0,
-          currentPosition: 0,
+          currentPosition_otherModes: 0,
         });
         break;
       case this.srsMode.mode2:
@@ -396,7 +453,7 @@ class App extends Component {
           srsMode,
           sortedData: data[currentPage],
           currentPage: 0,
-          currentPosition: 0,
+          currentPosition_otherModes: 0,
         });
         break;
 
@@ -404,18 +461,23 @@ class App extends Component {
         break;
     }
   };
+
   toggleScrolling = () => {
     this.setState({ scroll: !this.state.scroll });
   };
   handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    this.setState({ scroll: false });
+    // this.setState({ scroll: false });
   };
 
   handlePreviousPage = () => {
     this.setState(
       ({ currentPage }) => {
-        return { currentPage: Math.max(currentPage - 1, 0), currentPosition: 0 };
+        return {
+          currentPage: Math.max(currentPage - 1, 0),
+          currentPosition_defaultMode: 0,
+          currentPosition_otherModes: 0,
+        };
       },
       () => {
         this.updateReferenceToDOMSentenceElements();
@@ -427,7 +489,11 @@ class App extends Component {
   handleNextPage = () => {
     this.setState(
       ({ currentPage, data }) => {
-        return { currentPage: Math.min(currentPage + 1, data.length - 1), currentPosition: 0 };
+        return {
+          currentPage: Math.min(currentPage + 1, data.length - 1),
+          currentPosition_defaultMode: 0,
+          currentPosition_otherModes: 0,
+        };
       },
       () => {
         this.updateReferenceToDOMSentenceElements();
@@ -484,7 +550,7 @@ class App extends Component {
     this.setState(
       {
         data: jsonValue,
-        currentPosition: 0,
+        currentPosition_defaultMode: 0,
       },
       () => {
         this.updateReferenceToDOMSentenceElements();
@@ -568,18 +634,23 @@ class App extends Component {
                 </div>
               </div>
             </header>
+            {/* <ol start="100"> */}
             <ol start={currentPage * this.itemsPerPage + 1}>
               {sortedData.map(({ translation, sentence, id, word }, index) => {
                 return (
                   <li
                     className={`orator-${index} group_style`}
                     key={id}
-                    onClick={this.handleDoubleClick}
+                    // onClick={this.handleDoubleClick}
                   >
                     <div className="sentence-item">
-                      <h3>{word}</h3>
-                      <p className="sentence sentence_style">{sentence}</p>
-                      <p className="translation translation_style">{translation}</p>
+                      <h3 onClick={this.handleDoubleClick}>{word}</h3>
+                      <p className="sentence sentence_style" onClick={this.handleDoubleClick}>
+                        {sentence}
+                      </p>
+                      <p className="translation translation_style" onClick={this.handleDoubleClick}>
+                        {translation}
+                      </p>
                     </div>
                   </li>
                 );

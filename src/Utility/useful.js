@@ -82,9 +82,30 @@ export function chunkArrayInGroups(arr, size) {
   return myArray;
 }
 
-export function srsMode_1(dataArray, splitSize = 5) {
-  //   const dataArray = Array(600).map((item, index) => index);
-  //   //   const dataArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+export function srsMode_1(dataArray_, splitSize = 3) {
+  let dataArray = dataArray_.map((item, index) => index);
+  const result = chunkArrayInGroups(dataArray, splitSize)
+    .map((entry) => {
+      return [...entry, ...entry];
+    })
+    .flat();
+
+  return result;
+}
+
+export function srsMode_2(dataArray_, splitSize = 3) {
+  return dataArray_
+    .map((item, index) => {
+      return [index + 1, index, Math.min(index + 3, dataArray_.length)];
+    })
+    .flat();
+}
+
+export function srsMode_3(dataArray_, splitSize = 5) {
+  // 2,3,4
+  //   const dataArray_ = Array(600).fill().map((item, index) => index);
+  //   dataArray_ = ['a', ' b', ' c', ' d', ' c', ' e', ' f', ' g', ' h', ' i'];
+  let dataArray = dataArray_.map((item, index) => index);
   const result = [];
   let tempResult = [];
 
@@ -100,15 +121,4 @@ export function srsMode_1(dataArray, splitSize = 5) {
     counter++;
   }
   return result;
-  //   console.log('result: ', result);
-}
-export function srsMode_2(dataArray, splitSize = 3) {
-  const result = chunkArrayInGroups(dataArray, splitSize)
-    .map((entry) => {
-      return [...entry, ...entry];
-    })
-    .flat();
-
-  return result;
-  //   console.log('result: ', result);
 }
