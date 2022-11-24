@@ -420,3 +420,25 @@ li:before {
   color: lime;
   font-size: 20px;
 }
+
+.info-container {
+  .exampleButton {
+    height: 20px;
+    width: 100px;
+    background: #c7c5c2;
+    color: #173f0f;
+    font-weight: bold;
+    font-size: 12px;
+    border-radius: 10px;
+    border: 2px solid #000;
+    box-shadow: 2px 1px 8px -1px black;
+    opacity: 0.4;
+    white-space: nowrap;
+  }
+
+  p,
+  a {
+    color: #008b8b;
+    font-size: 12;
+  }
+}

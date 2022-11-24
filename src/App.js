@@ -213,7 +213,7 @@ class App extends Component {
           //     text,
           //     `<span class="activeWordHighlightStyle">${text}</span>`
           //   );
-          this.speech.setRate(1.0);
+          //   this.speech.setRate(1.0);
           break;
         }
         translation.classList.add('highlightStyle');
@@ -582,7 +582,7 @@ class App extends Component {
           id: uuid(),
         };
       });
-
+    console.log(JSON.stringify(jsonValue));
     jsonValue = chunkArrayInGroups(jsonValue, this.itemsPerPage);
     this.setState(
       {
@@ -736,6 +736,21 @@ class App extends Component {
               Scroll To Top
             </button>
           </div>
+
+          {/* ================== */}
+          {/* <button className="exampleButton" onClick={this.toggleScrolling}>
+              Default English Voices
+            </button> */}
+          {/* <div className="info-container">
+            <p> Try These Samples</p>
+            <button className="exampleButton" onClick={this.toggleScrolling}>
+              DE-EN
+            </button>
+            <button className="exampleButton" onClick={this.toggleSRSMode}>
+              DE-RU
+            </button>
+          </div>
+          <a href="#"> For more visit: contact LordKayBanks</a> */}
         </div>
       </>
     );
