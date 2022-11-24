@@ -18,7 +18,9 @@ body {
   min-height: 100vh;
   font-size: 1.8rem;
   color: #fff;
-  background: #928a8a;
+  //   background: #928a8a;
+  background-color: #d9afd9;
+  background-image: linear-gradient(0deg, #d9afd9 0%, #97d9e1 100%);
 }
 
 ol {
@@ -316,7 +318,7 @@ li:before {
 
 // ========================================
 .highlightStyle {
-  background: #e9b87a;
+  background: #d5e97a;
   color: #060104 !important;
   font-size: 16px;
   font-weight: bold;
@@ -324,7 +326,7 @@ li:before {
   border-radius: 5px;
 }
 .activeGroupHighlightStyle {
-  background: #726e6f !important;
+  background: #21211d !important;
   box-shadow: rgba(234, 224, 224, 0.74) 0px 5px 15px;
   transform: scale(1.05);
 }
