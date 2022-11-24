@@ -26,11 +26,12 @@ import './App.scss';
 
 const storage = global.localStorage || null;
 class App extends Component {
+  itemsPerPage = 50;
   allSentences = [];
   currentGroup = null;
   sentence = null;
   translation = null;
-  itemsPerPage = 50;
+  currentWord = null;
   srsMode = { mode1: 'mode1', mode2: 'mode2', default: 'default' };
   isNewGroup = { pass1: 'pass1', pass2: 'pass2', pass3: 'pass3' };
 
@@ -54,16 +55,16 @@ class App extends Component {
       translationSpeed: translationSpeed,
       translationVoice: translationVoice,
       translationVoice2: translationVoice2,
-      currentPosition_defaultMode: 0,
-      currentPosition_otherModes: 0,
-      isNewGroup: this.isNewGroup.pass1,
-      isReadingEachWordInTranslation: false,
-      wordPositionInTranslation: 0,
       shouldSpeak: true,
       isPlaying: false,
+      currentPosition_defaultMode: 0,
+      currentPosition_otherModes: 0,
       currentPage: 0,
       scroll: true,
       srsMode: this.srsMode.default,
+      isNewGroup: this.isNewGroup.pass1,
+      isReadingEachWordInTranslation: false,
+      wordPositionInTranslation: 0,
     };
     this.speech = new Speech(); // will throw an exception if not browser supported
     if (this.speech.hasBrowserSupport()) {
@@ -138,6 +139,12 @@ class App extends Component {
     this.sentence.classList.remove('highlightStyle');
     this.translation.classList.remove('highlightStyle');
     this.currentGroup.classList.remove('activeGroupHighlightStyle');
+    this.translation.textContent = this.currentWord;
+    this.setState({
+      isNewGroup: this.isNewGroup.pass1,
+      isReadingEachWordInTranslation: false,
+      wordPositionInTranslation: 0,
+    });
   }
   play = () => {
     if (this.state.shouldSpeak && !this.state.isPlaying) {
@@ -189,7 +196,23 @@ class App extends Component {
         break;
       case this.isNewGroup.pass2:
         if (isReadingEachWordInTranslation) {
-          text = translation.textContent.trim().split(' ')[wordPositionInTranslation];
+          this.currentWord = translation.textContent;
+          const textArray = translation.textContent.trim().split(' ');
+          text = textArray[wordPositionInTranslation];
+          let found = false;
+          translation.innerHTML = textArray
+            .map((item, index) => {
+              if (!found && index >= wordPositionInTranslation && item === text) {
+                found = true;
+                return `<span class="activeWordHighlightStyle">${text}</span>`;
+              }
+              return item;
+            })
+            .join(' ');
+          //   translation.innerHTML = this.currentWord.replace(
+          //     text,
+          //     `<span class="activeWordHighlightStyle">${text}</span>`
+          //   );
           this.speech.setRate(1.0);
           break;
         }
@@ -252,6 +275,7 @@ class App extends Component {
                       wordPositionInTranslation: 0,
                     },
                     () => {
+                      this.cleanUpHighlights();
                       this.speak();
                     }
                   );

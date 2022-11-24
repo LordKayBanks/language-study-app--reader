@@ -317,8 +317,17 @@ li:before {
 }
 
 // ========================================
+.activeWordHighlightStyle {
+  background: #2ea806;
+  color: black;
+  font-weight: bold;
+  padding: 3px;
+  border-radius: 4px;
+}
 .highlightStyle {
-  background: #d5e97a;
+  background-color: #fad961;
+  background-image: linear-gradient(90deg, #fad961 0%, #f76b1c 100%);
+
   color: #060104 !important;
   font-size: 16px;
   font-weight: bold;
@@ -400,8 +409,9 @@ li:before {
   background: #3a323380;
 }
 .sentence_style {
-  color: deeppink;
+  color: rgb(186, 234, 54);
   font-size: 16px;
+  font-weight: 400;
   border-bottom: 1px solid #0e9e6e4a;
   margin-bottom: 3px;
   padding-bottom: 3px;
