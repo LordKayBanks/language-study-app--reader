@@ -511,7 +511,6 @@ class App extends Component {
       {
         srsMode,
         sortedData,
-        // currentPage: 0,
         currentPosition_otherModes: 0,
       },
       () => this.persistState()

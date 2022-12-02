@@ -83,9 +83,11 @@ export function chunkArrayInGroups(arr, size) {
 }
 
 export function srsMode_1(dataArray_, splitSize = 3) {
+  // 012==012==345==345==678==678
   let dataArray = dataArray_.map((item, index) => index);
   const result = chunkArrayInGroups(dataArray, splitSize)
-    .map((entry) => {
+    .map((entry, index) => {
+      //   return [...entry, result[Math.min(index + 2, result.length - 1)], ...entry];
       return [...entry, ...entry];
     })
     .flat();
@@ -93,18 +95,7 @@ export function srsMode_1(dataArray_, splitSize = 3) {
   return result;
 }
 
-export function srsMode_2(dataArray_) {
-  return dataArray_
-    .map((item, index) => {
-      return [
-        index,
-        Math.min(index + 1, dataArray_.length - 1),
-        Math.min(index + 2, dataArray_.length - 1),
-      ];
-    })
-    .flat();
-}
-export function srsMode_3(dataArray_, splitSize = 3) {
+export function srsMode_2(dataArray_, splitSize = 3) {
   let dataArray = dataArray_.map((item, index) => index);
   dataArray = chunkArrayInGroups(dataArray, splitSize);
 
@@ -119,6 +110,14 @@ export function srsMode_3(dataArray_, splitSize = 3) {
     result.push(dataArray[i], randomPair);
   }
   return result.flat();
+}
+export function srsMode_3(dataArray_) {
+  // 0, 1, 0==1,2,1==2,3,2==3,4,3
+  return dataArray_
+    .map((entry, index) => {
+      return [Math.max(index - 1, 0), index, Math.max(index - 1, 0)];
+    })
+    .flat();
 }
 
 function srsMode_test(dataArray_, splitSize = 5) {
