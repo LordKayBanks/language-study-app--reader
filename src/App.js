@@ -298,6 +298,11 @@ class App extends Component {
                 ) {
                   //if this is the last group: default SRS Mode
                   this.cleanUpHighlights();
+                  window.scroll({
+                    top: 0,
+                    left: 0,
+                    behavior: 'smooth',
+                  });
                   return this.setState({
                     shouldSpeak: true,
                     isPlaying: false,
@@ -309,14 +314,20 @@ class App extends Component {
                 ) {
                   //if this is the last group: other SRS Modes
                   this.cleanUpHighlights();
+                  window.scroll({
+                    top: 0,
+                    left: 0,
+                    behavior: 'smooth',
+                  });
                   return this.setState({
                     shouldSpeak: true,
                     isPlaying: false,
                     currentPosition_otherModes: 0,
                   });
                 }
-                // ===================================================
 
+                // =================================================================
+                // =================================================================
                 if (this.state.srsMode === this.srsMode.default) {
                   this.setState(
                     (state, props) => {

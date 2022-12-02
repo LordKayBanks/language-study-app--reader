@@ -58,16 +58,10 @@ li:before {
   justify-content: center;
 
   & section {
-    & ol {
-      margin-top: 10px;
-
-      & li {
-        display: flex;
-      }
-    }
-
     padding: 10px 40px;
     overflow-x: clip;
+    margin-bottom: 120px;
+
     @media screen and (max-width: 460px) {
       width: 75vw;
     }
@@ -76,6 +70,14 @@ li:before {
     }
     @media only screen and (min-width: 992px) {
       width: 768px;
+    }
+
+    & ol {
+      margin-top: 10px;
+
+      & li {
+        display: flex;
+      }
     }
   }
 
