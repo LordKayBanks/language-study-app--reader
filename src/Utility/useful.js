@@ -113,11 +113,12 @@ export function srsMode_2(dataArray_, splitSize = 3) {
 }
 export function srsMode_3(dataArray_) {
   // 0, 1, 0==1,2,1==2,3,2==3,4,3
-  return dataArray_
-    .map((entry, index) => {
-      return [Math.max(index - 1, 0), index, Math.max(index - 1, 0)];
-    })
-    .flat();
+  let result = dataArray_.map((entry, index) => {
+    return [Math.max(index - 1, 0), index, Math.max(index - 1, 0)];
+  });
+  [, ...result] = result; // .shift() // remove first array, it is a repeated [0,0,0]
+  result = result.flat();
+  return result;
 }
 
 function srsMode_test(dataArray_, splitSize = 5) {

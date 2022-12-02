@@ -526,6 +526,7 @@ class App extends Component {
   };
 
   handlePreviousPage = () => {
+    this.play();
     this.setState(
       ({ currentPage }) => {
         return {
@@ -538,10 +539,12 @@ class App extends Component {
         this.updateReferenceToDOMSentenceElements();
         this.persistState();
         this.handleScrollToTop();
+        this.play();
       }
     );
   };
   handleNextPage = () => {
+    this.play();
     this.setState(
       ({ currentPage, data }) => {
         return {
@@ -554,6 +557,7 @@ class App extends Component {
         this.updateReferenceToDOMSentenceElements();
         this.persistState();
         this.handleScrollToTop();
+        this.play();
       }
     );
   };
@@ -594,6 +598,7 @@ class App extends Component {
     this.setState(
       {
         data: jsonValue,
+        currentPage: 0,
         currentPosition_defaultMode: 0,
       },
       () => {
