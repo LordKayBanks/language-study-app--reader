@@ -1,27 +1,27 @@
 {
   "files": {
     "main.css": "/language-study-app--reader/static/css/main.1c500725.chunk.css",
-    "main.js": "/language-study-app--reader/static/js/main.c7779df1.chunk.js",
-    "main.js.map": "/language-study-app--reader/static/js/main.c7779df1.chunk.js.map",
+    "main.js": "/language-study-app--reader/static/js/main.7670d95d.chunk.js",
+    "main.js.map": "/language-study-app--reader/static/js/main.7670d95d.chunk.js.map",
     "runtime-main.js": "/language-study-app--reader/static/js/runtime-main.d3d836eb.js",
     "runtime-main.js.map": "/language-study-app--reader/static/js/runtime-main.d3d836eb.js.map",
     "static/css/2.82f03f93.chunk.css": "/language-study-app--reader/static/css/2.82f03f93.chunk.css",
-    "static/js/2.e86b09e4.chunk.js": "/language-study-app--reader/static/js/2.e86b09e4.chunk.js",
-    "static/js/2.e86b09e4.chunk.js.map": "/language-study-app--reader/static/js/2.e86b09e4.chunk.js.map",
+    "static/js/2.c3cf97b8.chunk.js": "/language-study-app--reader/static/js/2.c3cf97b8.chunk.js",
+    "static/js/2.c3cf97b8.chunk.js.map": "/language-study-app--reader/static/js/2.c3cf97b8.chunk.js.map",
     "index.html": "/language-study-app--reader/index.html",
-    "precache-manifest.dcf9fca3a6db6f2dbca7fbf4ecc7d635.js": "/language-study-app--reader/precache-manifest.dcf9fca3a6db6f2dbca7fbf4ecc7d635.js",
+    "precache-manifest.9fc1a2b3836a9687a2d4206a57daaf7c.js": "/language-study-app--reader/precache-manifest.9fc1a2b3836a9687a2d4206a57daaf7c.js",
     "service-worker.js": "/language-study-app--reader/service-worker.js",
     "static/css/2.82f03f93.chunk.css.map": "/language-study-app--reader/static/css/2.82f03f93.chunk.css.map",
     "static/css/main.1c500725.chunk.css.map": "/language-study-app--reader/static/css/main.1c500725.chunk.css.map",
-    "static/js/2.e86b09e4.chunk.js.LICENSE": "/language-study-app--reader/static/js/2.e86b09e4.chunk.js.LICENSE",
+    "static/js/2.c3cf97b8.chunk.js.LICENSE": "/language-study-app--reader/static/js/2.c3cf97b8.chunk.js.LICENSE",
     "static/media/Logo.png": "/language-study-app--reader/static/media/Logo.9a07bb51.png",
     "static/media/Upload.png": "/language-study-app--reader/static/media/Upload.9a85f062.png"
   },
   "entrypoints": [
     "static/js/runtime-main.d3d836eb.js",
     "static/css/2.82f03f93.chunk.css",
-    "static/js/2.e86b09e4.chunk.js",
+    "static/js/2.c3cf97b8.chunk.js",
     "static/css/main.1c500725.chunk.css",
-    "static/js/main.c7779df1.chunk.js"
+    "static/js/main.7670d95d.chunk.js"
   ]
 }
