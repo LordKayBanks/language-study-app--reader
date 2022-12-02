@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import Select from 'react-select';
 import Speech from 'speak-tts';
 import FileReaderInput from 'react-file-reader-input';
-import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 
 import SpeedSlider from './modules/Components/SpeedSlider';
@@ -15,12 +14,19 @@ import {
   Back as BackIcon,
   Forward as ForwardIcon,
 } from './Icons';
-import { chunkArrayInGroups, defaultPlatformVoice, srsMode_1, srsMode_2 } from './Utility/useful';
+import {
+  chunkArrayInGroups,
+  defaultPlatformVoice,
+  srsMode_1,
+  srsMode_2,
+  srsMode_3,
+} from './Utility/useful';
 import {
   mockData,
   sentenceVoice as defaultSentenceVoice,
   translationVoice as defaultTranslationVoice,
   translationVoice2 as defaultTranslationVoice2,
+  sortedData as defaultSortedData,
 } from './constants';
 import './App.scss';
 
@@ -32,7 +38,7 @@ class App extends Component {
   sentence = null;
   translation = null;
   currentWord = null;
-  srsMode = { mode1: 'mode1', mode2: 'mode2', default: 'default' };
+  srsMode = { mode1: 'mode1', mode2: 'mode2', mode3: 'mode3', default: 'default' };
   isNewGroup = { pass1: 'pass1', pass2: 'pass2', pass3: 'pass3' };
 
   constructor(props) {
@@ -45,10 +51,13 @@ class App extends Component {
     let translationVoice = storedState?.translationVoice ?? defaultTranslationVoice;
     let translationVoice2 = storedState?.translationVoice2 ?? defaultTranslationVoice2;
     let data = storedState?.data ?? [mockData];
+    let sortedData = storedState?.sortedData ?? defaultSortedData;
+    let currentPage = storedState?.currentPage ?? 0;
+    let srsMode = storedState?.srsMode ?? this.srsMode.default;
 
     this.state = {
       data: data,
-      sortedData: [],
+      sortedData: sortedData,
       voiceList: [],
       sentenceSpeed: sentenceSpeed,
       sentenceVoice: sentenceVoice,
@@ -59,9 +68,9 @@ class App extends Component {
       isPlaying: false,
       currentPosition_defaultMode: 0,
       currentPosition_otherModes: 0,
-      currentPage: 0,
+      currentPage: currentPage,
       scroll: true,
-      srsMode: this.srsMode.default,
+      srsMode: srsMode,
       isNewGroup: this.isNewGroup.pass1,
       isReadingEachWordInTranslation: false,
       wordPositionInTranslation: 0,
@@ -476,38 +485,37 @@ class App extends Component {
     const { currentPage, data } = this.state;
 
     let srsMode = this.srsMode.mode1;
+    let sortedData = [];
     switch (this.state.srsMode) {
       case this.srsMode.default:
         srsMode = this.srsMode.mode1;
-        this.setState({
-          srsMode,
-          sortedData: srsMode_1(data[currentPage]),
-          currentPage: 0,
-          currentPosition_defaultMode: 0,
-        });
+        sortedData = srsMode_1(data[currentPage]);
         break;
       case this.srsMode.mode1:
         srsMode = this.srsMode.mode2;
-        this.setState({
-          srsMode,
-          sortedData: srsMode_2(data[currentPage]),
-          currentPage: 0,
-          currentPosition_otherModes: 0,
-        });
+        sortedData = srsMode_2(data[currentPage]);
         break;
       case this.srsMode.mode2:
+        srsMode = this.srsMode.mode3;
+        sortedData = srsMode_3(data[currentPage]);
+        break;
+      case this.srsMode.mode3:
         srsMode = this.srsMode.default;
-        this.setState({
-          srsMode,
-          sortedData: data[currentPage],
-          currentPage: 0,
-          currentPosition_otherModes: 0,
-        });
+        sortedData = data[currentPage];
         break;
 
       default:
         break;
     }
+    this.setState(
+      {
+        srsMode,
+        sortedData,
+        // currentPage: 0,
+        currentPosition_otherModes: 0,
+      },
+      () => this.persistState()
+    );
   };
 
   toggleScrolling = () => {

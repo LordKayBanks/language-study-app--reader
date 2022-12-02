@@ -93,15 +93,38 @@ export function srsMode_1(dataArray_, splitSize = 3) {
   return result;
 }
 
-export function srsMode_2(dataArray_, splitSize = 3) {
+export function srsMode_2(dataArray_) {
   return dataArray_
     .map((item, index) => {
-      return [index + 1, index, Math.min(index + 3, dataArray_.length)];
+      return [
+        index,
+        Math.min(index + 1, dataArray_.length - 1),
+        Math.min(index + 2, dataArray_.length - 1),
+      ];
     })
     .flat();
 }
+export function srsMode_3(dataArray_, splitSize = 3) {
+  let dataArray = dataArray_.map((item, index) => index);
+  dataArray = chunkArrayInGroups(dataArray, splitSize);
 
-export function srsMode_3(dataArray_, splitSize = 5) {
+  const result = [[]];
+  for (let i = 0; i < dataArray.length; i++) {
+    let tempArray = result
+      .flat()
+      .slice(-10)
+      .filter((entry) => entry.length !== splitSize);
+    tempArray = chunkArrayInGroups(tempArray, splitSize);
+    let randomPair = tempArray[Math.floor(Math.random() * tempArray.length)] ?? dataArray[i + 1];
+    result.push(dataArray[i], randomPair);
+  }
+  return result.flat();
+}
+
+function srsMode_test(dataArray_, splitSize = 5) {
+  //   ==============================
+  dataArray_ = Array(50).fill();
+  //   ==============================
   // 2,3,4
   //   const dataArray_ = Array(600).fill().map((item, index) => index);
   //   dataArray_ = ['a', ' b', ' c', ' d', ' c', ' e', ' f', ' g', ' h', ' i'];
