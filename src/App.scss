@@ -7,7 +7,7 @@
   font-size: inherit;
   font-weight: 300;
   line-height: 1.4;
-  word-break: break-word;
+  //   word-break: break-word;
 }
 html {
   font-size: 62.5%;
@@ -403,6 +403,8 @@ li:before {
   padding: 5px 10px;
   margin-bottom: 10px;
   border-radius: 5px;
+
+  overflow: hidden;
 }
 .group_style:nth-child(odd) {
   background: #3a3233;
@@ -414,7 +416,6 @@ li:before {
   color: rgb(186, 234, 54);
   font-size: 16px;
   font-weight: 400;
-  border-bottom: 1px solid #0e9e6e4a;
   margin-bottom: 3px;
   padding-bottom: 3px;
 }
@@ -442,5 +443,48 @@ li:before {
   a {
     color: #008b8b;
     font-size: 12;
+  }
+}
+
+.sentence-item {
+  width: 100%;
+  overflow-x: hidden;
+  //   white-space: nowrap;
+}
+
+.word-definition {
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #0000002e;
+
+  //   width: 90%;
+
+  .tag-container {
+    // display: inline-block;
+
+    .tags {
+      margin: 0 3px;
+      border-radius: 3px;
+      font-size: 10px;
+      padding: 3px;
+      font-weight: 500;
+      //   word-break: break-all;
+    }
+    .word-partOfSpeech {
+      background: #ff000089;
+      color: #ffffff;
+    }
+    .word-translations {
+      background: #1e4444;
+      color: #ffffff9c;
+    }
+    & > .word-translations {
+      //   border: 1px solid #d2c91c;
+      border: 1px solid #fff2008c;
+    }
+
+    & > .word-translations ~ .word-translations {
+      border: none;
+    }
   }
 }

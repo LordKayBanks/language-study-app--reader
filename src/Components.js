@@ -9,7 +9,7 @@ export const GlobalStyle = createGlobalStyle`
     font-size: inherit;
     font-weight: 300;
     line-height: 1.4;
-    word-break: break-word;
+    /* word-break: break-word; */
   }
   html {
     font-size: 62.5%;

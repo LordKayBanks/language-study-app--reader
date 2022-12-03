@@ -22,12 +22,12 @@ import {
   srsMode_3,
 } from './Utility/useful';
 import {
-  mockData,
   sentenceVoice as defaultSentenceVoice,
   translationVoice as defaultTranslationVoice,
   translationVoice2 as defaultTranslationVoice2,
   sortedData as defaultSortedData,
 } from './constants';
+import { mockData } from './data/french.data';
 import './App.scss';
 
 const storage = global.localStorage || null;
@@ -44,13 +44,14 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    const storedState = JSON.parse(storage?.getItem('state')) ?? {};
+    const storedState = JSON.parse(storage?.getItem('state'));
     let sentenceSpeed = storedState?.sentenceSpeed ?? 1.2;
     let sentenceVoice = storedState?.sentenceVoice ?? defaultSentenceVoice;
     let translationSpeed = storedState?.translationSpeed ?? 1.2;
     let translationVoice = storedState?.translationVoice ?? defaultTranslationVoice;
     let translationVoice2 = storedState?.translationVoice2 ?? defaultTranslationVoice2;
-    let data = storedState?.data ?? [mockData];
+
+    let data = storedState?.data ?? mockData;
     let sortedData = storedState?.sortedData ?? defaultSortedData;
     let currentPage = storedState?.currentPage ?? 0;
     let srsMode = storedState?.srsMode ?? this.srsMode.default;
@@ -572,7 +573,7 @@ class App extends Component {
       }
     );
   };
-  handleFileChange = (event, results) => {
+  handleFileUpload = (event, results) => {
     if (!results.length) return;
 
     const [e, file] = results[0];
@@ -581,9 +582,10 @@ class App extends Component {
     }
     let jsonValue = JSON.parse(new TextDecoder().decode(e.target.result));
     jsonValue = Object.entries(jsonValue)
-      .map(([key, value]) => {
-        return value.map((value) => {
-          return { ...value, word: key };
+      .map(([word, value]) => {
+        const { examples, wordTranslations } = value;
+        return examples?.map((value) => {
+          return { ...value, word, wordTranslations };
         });
       })
       .flat()
@@ -599,12 +601,13 @@ class App extends Component {
         }
         return {
           word: item?.word ?? '',
+          wordTranslations: item?.wordTranslations ?? [],
           sentence: Translation.replace(/\[\w+\s*\w+?\]/g, '') /* [Sarah] or [John B] */,
           translation: Subtitle,
           id: uuid(),
         };
       });
-    console.log(JSON.stringify(jsonValue));
+    // console.log(JSON.stringify(jsonValue));
     jsonValue = chunkArrayInGroups(jsonValue, this.itemsPerPage);
     this.setState(
       {
@@ -619,8 +622,25 @@ class App extends Component {
     );
   };
 
+  translationTags = (wordTranslations = []) => {
+    return wordTranslations.map(({ pos, translations }) => {
+      return (
+        <span className="tag-container" key={pos}>
+          <span className="word-partOfSpeech tags">{pos}</span>
+          {translations.slice(0, 6).map((entry) => {
+            return (
+              <span key={entry} className="word-translations tags">
+                {entry}
+              </span>
+            );
+          })}
+        </span>
+      );
+    });
+  };
   render() {
     let { data, sortedData, currentPage } = this.state;
+    // console.log(JSON.stringify(data));
     sortedData = data[currentPage];
 
     return (
@@ -677,7 +697,7 @@ class App extends Component {
                 </div>
                 <div className="file-reader__wrapper">
                   <div className="file-reader">
-                    <FileReaderInput as="buffer" onChange={this.handleFileChange}>
+                    <FileReaderInput as="buffer" onChange={this.handleFileUpload}>
                       <img
                         src={UploadIcon}
                         className="Upload-button"
@@ -696,7 +716,7 @@ class App extends Component {
             </header>
             {/* <ol start="100"> */}
             <ol start={currentPage * this.itemsPerPage + 1}>
-              {sortedData.map(({ translation, sentence, id, word }, index) => {
+              {sortedData.map(({ translation, sentence, id, word, wordTranslations }, index) => {
                 return (
                   <li
                     className={`orator-${index} group_style`}
@@ -704,7 +724,9 @@ class App extends Component {
                     // onClick={this.handleDoubleClick}
                   >
                     <div className="sentence-item">
-                      <h3 onClick={this.handleDoubleClick}>{word}</h3>
+                      <h3 className="word-definition" onClick={this.handleDoubleClick}>
+                        {word}:{this.translationTags(wordTranslations)}
+                      </h3>
                       <p className="sentence sentence_style" onClick={this.handleDoubleClick}>
                         {sentence}
                       </p>
