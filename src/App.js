@@ -622,10 +622,10 @@ class App extends Component {
     );
   };
 
-  translationTags = (wordTranslations = []) => {
-    return wordTranslations.map(({ pos, translations }) => {
+  translationTags = (wordTranslations = [], word = '') => {
+    const result = wordTranslations.map(({ pos, translations }) => {
       return (
-        <span className="tag-container" key={pos}>
+        <>
           <span className="word-partOfSpeech tags">{pos}</span>
           {translations.slice(0, 6).map((entry) => {
             return (
@@ -634,9 +634,11 @@ class App extends Component {
               </span>
             );
           })}
-        </span>
+        </>
       );
     });
+    result.unshift(<span className="word">{word}:</span>);
+    return result;
   };
   render() {
     let { data, sortedData, currentPage } = this.state;
@@ -725,7 +727,9 @@ class App extends Component {
                   >
                     <div className="sentence-item">
                       <h3 className="word-definition" onClick={this.handleDoubleClick}>
-                        {word}:{this.translationTags(wordTranslations)}
+                        <span className="tag-container">
+                          {this.translationTags(wordTranslations, word)}
+                        </span>
                       </h3>
                       <p className="sentence sentence_style" onClick={this.handleDoubleClick}>
                         {sentence}

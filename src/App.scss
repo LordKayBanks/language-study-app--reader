@@ -414,10 +414,10 @@ li:before {
 }
 .sentence_style {
   color: rgb(186, 234, 54);
-  font-size: 16px;
   font-weight: 400;
   margin-bottom: 3px;
   padding-bottom: 3px;
+  font-size: 16px;
 }
 .translation_style {
   color: lime;
@@ -449,7 +449,6 @@ li:before {
 .sentence-item {
   width: 100%;
   overflow-x: hidden;
-  //   white-space: nowrap;
 }
 
 .word-definition {
@@ -457,18 +456,22 @@ li:before {
   margin-bottom: 10px;
   border-bottom: 1px solid #0000002e;
 
-  //   width: 90%;
-
   .tag-container {
-    // display: inline-block;
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
 
+    .word {
+      margin-right: 5px;
+    }
     .tags {
-      margin: 0 3px;
+      margin: 3px;
+      padding: 3px;
       border-radius: 3px;
       font-size: 10px;
-      padding: 3px;
       font-weight: 500;
-      //   word-break: break-all;
+      // word-break: break-all;
+      // overflow-wrap: break-word;
     }
     .word-partOfSpeech {
       background: #ff000089;
@@ -479,12 +482,28 @@ li:before {
       color: #ffffff9c;
     }
     & > .word-translations {
-      //   border: 1px solid #d2c91c;
       border: 1px solid #fff2008c;
     }
 
     & > .word-translations ~ .word-translations {
       border: none;
+    }
+  }
+}
+
+//   anything below 768px
+@media only screen and (max-width: 768px) {
+  .sentence_style,
+  .translation_style {
+    font-size: 12px;
+  }
+  .word-definition {
+    .tag-container {
+      .tags {
+        font-size: 7px;
+        margin: 1px;
+        padding: 2px;
+      }
     }
   }
 }
