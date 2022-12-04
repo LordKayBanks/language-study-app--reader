@@ -58,15 +58,16 @@ li:before {
   justify-content: center;
 
   & section {
-    padding: 10px 40px;
+    // padding: 10px 40px;
+    padding: 10px 20px;
     overflow-x: clip;
     margin-bottom: 120px;
 
-    @media screen and (max-width: 460px) {
-      width: 75vw;
-    }
+    // @media screen and (max-width: 460px) {
+    //   width: 75vw;
+    // }
     @media screen and (min-width: 540px) {
-      width: 80vw;
+      width: 85vw;
     }
     @media only screen and (min-width: 992px) {
       width: 768px;
