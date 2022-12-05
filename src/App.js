@@ -591,19 +591,20 @@ class App extends Component {
       .flat()
       .map((item) => {
         let Translation = '';
-        let Subtitle = '';
+        let originalText = '';
         if (!item?.Translation || !item?.Subtitle) {
+          // data from Netflix
+          originalText = item?.text;
           Translation = item?.translation;
-          Subtitle = item?.text;
         } else {
+          originalText = item?.Subtitle;
           Translation = item?.Translation;
-          Subtitle = item?.Subtitle;
         }
         return {
           word: item?.word ?? '',
           wordTranslations: item?.wordTranslations ?? [],
-          sentence: Translation.replace(/\[\w+\s*\w+?\]/g, '') /* [Sarah] or [John B] */,
-          translation: Subtitle,
+          sentence: originalText,
+          translation: Translation.replace(/\[\w+\s*\w+?\]/g, '') /* [Sarah] or [John B] */,
           id: uuid(),
         };
       });
