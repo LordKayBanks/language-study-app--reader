@@ -795,7 +795,7 @@ class App extends Component {
           <div>
             <button className="srsMode" onClick={this.toggleSRSMode}>
               {parseInt(this.state.srsMode.match(/\d+/g))
-                ? 'Shuffle-' + parseInt(this.state.srsMode.match(/\d+/g))
+                ? 'Mode-' + parseInt(this.state.srsMode.match(/\d+/g))
                 : 'Default'}
             </button>
             <button
