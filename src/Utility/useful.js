@@ -74,6 +74,23 @@ export const defaultPlatformVoice =
         browser: 'other',
       };
 
+function shuffleArray(array) {
+  let currentIndex = array.length,
+    randomIndex;
+
+  // While there remain elements to shuffle.
+  while (currentIndex != 0) {
+    // Pick a remaining element.
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
+}
+
 export function chunkArrayInGroups(arr, size) {
   var myArray = [];
   for (var i = 0; i < arr.length; i += size) {
@@ -101,25 +118,37 @@ export function srsMode_2(dataArray_, splitSize = 3) {
 
   const result = [[]];
   for (let i = 0; i < dataArray.length; i++) {
-    let tempArray = result
-      .flat()
-      .slice(-10)
-      .filter((entry) => entry.length !== splitSize);
+    let tempArray = result.flat().slice(-10);
+    tempArray = shuffleArray(tempArray).filter((entry) => entry.length !== splitSize);
     tempArray = chunkArrayInGroups(tempArray, splitSize);
     let randomPair = tempArray[Math.floor(Math.random() * tempArray.length)] ?? dataArray[i + 1];
     result.push(dataArray[i], randomPair);
   }
   return result.flat();
 }
-export function srsMode_3(dataArray_) {
-  // 0, 1, 0==1,2,1==2,3,2==3,4,3
-  return dataArray_
-    .map((entry, index) => {
-      return [Math.max(index - 1, 0), index, Math.max(index - 1, 0)];
-    })
-    .slice(1) // remove first array, it is a repeated [0,0,0]
-    .flat();
+export function srsMode_3(dataArray_, splitSize = 3) {
+  let dataArray = dataArray_.map((item, index) => index);
+  dataArray = chunkArrayInGroups(dataArray, splitSize);
+
+  const result = [[]];
+  for (let i = 0; i < dataArray.length; i++) {
+    let tempArray = result.flat();
+    tempArray = shuffleArray(tempArray).filter((entry) => entry.length !== splitSize);
+    tempArray = chunkArrayInGroups(tempArray, splitSize);
+    let randomPair = tempArray[Math.floor(Math.random() * tempArray.length)] ?? dataArray[i + 1];
+    result.push(dataArray[i], randomPair);
+  }
+  return result.flat();
 }
+// export function srsMode_3(dataArray_) {
+//   // 0, 1, 0==1,2,1==2,3,2==3,4,3
+//   return dataArray_
+//     .map((entry, index) => {
+//       return [Math.max(index - 1, 0), index, Math.max(index - 1, 0)];
+//     })
+//     .slice(1) // remove first array, it is a repeated [0,0,0]
+//     .flat();
+// }
 
 function srsMode_test(dataArray_, splitSize = 5) {
   //   ==============================

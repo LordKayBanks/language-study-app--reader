@@ -39,7 +39,7 @@ class App extends Component {
   translation = null;
   currentWord = null;
   srsMode = { mode1: 'mode1', mode2: 'mode2', mode3: 'mode3', default: 'default' };
-  isNewGroup = { pass1: 'pass1', pass2: 'pass2', pass3: 'pass3' };
+  isNewGroup = { pass0: 'pass0', pass1: 'pass1', pass2: 'pass2' };
 
   constructor(props) {
     super(props);
@@ -68,11 +68,11 @@ class App extends Component {
       shouldSpeak: true,
       isPlaying: false,
       currentPosition_defaultMode: 0,
-      currentPosition_otherModes: 0,
+      currentPosition_shuffleModes: 0,
       currentPage: currentPage,
       scroll: true,
       srsMode: srsMode,
-      isNewGroup: this.isNewGroup.pass1,
+      isNewGroup: this.isNewGroup.pass0,
       isReadingEachWordInTranslation: false,
       wordPositionInTranslation: 0,
     };
@@ -151,7 +151,7 @@ class App extends Component {
     this.currentGroup.classList.remove('activeGroupHighlightStyle');
     this.translation.textContent = this.currentWord;
     this.setState({
-      isNewGroup: this.isNewGroup.pass1,
+      isNewGroup: this.isNewGroup.pass0,
       isReadingEachWordInTranslation: false,
       wordPositionInTranslation: 0,
     });
@@ -197,14 +197,14 @@ class App extends Component {
 
     currentGroup.classList.add('activeGroupHighlightStyle');
     switch (isNewGroup) {
-      case this.isNewGroup.pass1:
+      case this.isNewGroup.pass0:
         sentence.classList.add('highlightStyle');
         text = sentence.textContent.trim();
         this.speech.setVoice(sentenceVoice.voice);
         this.speech.setLanguage(sentenceVoice.lang);
         this.speech.setRate(sentenceSpeed);
         break;
-      case this.isNewGroup.pass2:
+      case this.isNewGroup.pass1:
         if (isReadingEachWordInTranslation) {
           this.currentWord = translation.textContent;
           const textArray = translation.textContent.trim().split(' ');
@@ -232,7 +232,7 @@ class App extends Component {
         this.speech.setLanguage(translationVoice.lang);
         this.speech.setRate(translationSpeed);
         break;
-      case this.isNewGroup.pass3:
+      case this.isNewGroup.pass2:
         translation.classList.add('highlightStyle');
         text = translation.textContent.trim();
         this.speech.setVoice(translationVoice2.voice);
@@ -255,14 +255,14 @@ class App extends Component {
             if (this.speech.speaking() || this.speech.pending()) return;
 
             switch (isNewGroup) {
-              case this.isNewGroup.pass1:
-                this.setState({ isNewGroup: this.isNewGroup.pass2 }, () => {
+              case this.isNewGroup.pass0:
+                this.setState({ isNewGroup: this.isNewGroup.pass1 }, () => {
                   sentence.classList.remove('highlightStyle');
                   this.speak();
                 });
                 break;
 
-              case this.isNewGroup.pass2:
+              case this.isNewGroup.pass1:
                 if (!isReadingEachWordInTranslation) {
                   //first time reading the translation
                   this.setState({ isReadingEachWordInTranslation: true }, () => this.speak());
@@ -280,7 +280,7 @@ class App extends Component {
                   // this is the end of reading each word, moves it to the next phase
                   this.setState(
                     {
-                      isNewGroup: this.isNewGroup.pass3,
+                      isNewGroup: this.isNewGroup.pass2,
                       isReadingEachWordInTranslation: false,
                       wordPositionInTranslation: 0,
                     },
@@ -292,7 +292,7 @@ class App extends Component {
                 }
                 break;
 
-              case this.isNewGroup.pass3:
+              case this.isNewGroup.pass2:
                 if (
                   this.state.srsMode === this.srsMode.default &&
                   this.state.currentPosition_defaultMode >= this.allSentences.length - 1
@@ -308,10 +308,11 @@ class App extends Component {
                     shouldSpeak: true,
                     isPlaying: false,
                     currentPosition_defaultMode: 0,
+                    isNewGroup: this.isNewGroup.pass0,
                   });
                 } else if (
                   this.state.srsMode !== this.srsMode.default &&
-                  this.state.currentPosition_otherModes >= this.state.sortedData.length - 1
+                  this.state.currentPosition_shuffleModes >= this.state.sortedData.length - 1
                 ) {
                   //if this is the last group: other SRS Modes
                   this.cleanUpHighlights();
@@ -323,7 +324,8 @@ class App extends Component {
                   return this.setState({
                     shouldSpeak: true,
                     isPlaying: false,
-                    currentPosition_otherModes: 0,
+                    currentPosition_shuffleModes: 0,
+                    isNewGroup: this.isNewGroup.pass0,
                   });
                 }
 
@@ -334,7 +336,7 @@ class App extends Component {
                     (state, props) => {
                       return {
                         currentPosition_defaultMode: state.currentPosition_defaultMode + 1,
-                        isNewGroup: this.isNewGroup.pass1,
+                        isNewGroup: this.isNewGroup.pass0,
                       };
                     },
                     () => {
@@ -347,10 +349,10 @@ class App extends Component {
                   this.setState(
                     (state, props) => {
                       return {
-                        currentPosition_otherModes: state.currentPosition_otherModes + 1,
+                        currentPosition_shuffleModes: state.currentPosition_shuffleModes + 1,
                         currentPosition_defaultMode:
-                          state.sortedData[state.currentPosition_otherModes + 1],
-                        isNewGroup: this.isNewGroup.pass1,
+                          state.sortedData[state.currentPosition_shuffleModes + 1],
+                        isNewGroup: this.isNewGroup.pass0,
                       };
                     },
                     () => {
@@ -396,23 +398,40 @@ class App extends Component {
       let clickedPosition = target.parentNode.parentNode.getAttribute('class');
       clickedPosition = parseInt(clickedPosition.match(/\d+/g));
 
-      if (this.state.srsMode === this.srsMode.default)
+      if (this.state.srsMode === this.srsMode.default) {
+        this.play();
         return this.setState(
           {
             currentPosition_defaultMode: Math.max(clickedPosition, 0),
-            isNewGroup: this.isNewGroup.pass1,
-          } /*, () => console.log(clickedPosition)*/
+            isNewGroup: this.isNewGroup.pass0,
+          },
+          () => {
+            this.updateReferenceToDOMSentenceElements();
+            this.cleanUpHighlights();
+            this.persistState();
+            this.play();
+          }
         );
+      }
 
-      let newCurrentPosition_otherModes = this.state.sortedData.findIndex((item) => {
+      let currentPosition_shuffleModes = this.state.sortedData.findIndex((item) => {
         return item === clickedPosition ? true : false;
       });
 
-      this.setState({
-        currentPosition_defaultMode: Math.max(clickedPosition, 0),
-        currentPosition_otherModes: newCurrentPosition_otherModes,
-        isNewGroup: this.isNewGroup.pass1,
-      });
+      this.play();
+      this.setState(
+        {
+          currentPosition_defaultMode: Math.max(clickedPosition, 0),
+          currentPosition_shuffleModes,
+          isNewGroup: this.isNewGroup.pass0,
+        },
+        () => {
+          this.updateReferenceToDOMSentenceElements();
+          this.cleanUpHighlights();
+          this.persistState();
+          this.play();
+        }
+      );
     }
   };
   handleSentenceVoiceChange = (sentenceVoice) => {
@@ -523,7 +542,7 @@ class App extends Component {
       {
         srsMode,
         sortedData,
-        currentPosition_otherModes: 0,
+        currentPosition_shuffleModes: 0,
       },
       () => this.persistState()
     );
@@ -544,11 +563,13 @@ class App extends Component {
         return {
           currentPage: Math.max(currentPage - 1, 0),
           currentPosition_defaultMode: 0,
-          currentPosition_otherModes: 0,
+          currentPosition_shuffleModes: 0,
+          isNewGroup: this.isNewGroup.pass0,
         };
       },
       () => {
         this.updateReferenceToDOMSentenceElements();
+        this.cleanUpHighlights();
         this.persistState();
         this.handleScrollToTop();
         this.play();
@@ -562,11 +583,13 @@ class App extends Component {
         return {
           currentPage: Math.min(currentPage + 1, data.length - 1),
           currentPosition_defaultMode: 0,
-          currentPosition_otherModes: 0,
+          currentPosition_shuffleModes: 0,
+          isNewGroup: this.isNewGroup.pass0,
         };
       },
       () => {
         this.updateReferenceToDOMSentenceElements();
+        this.cleanUpHighlights();
         this.persistState();
         this.handleScrollToTop();
         this.play();
