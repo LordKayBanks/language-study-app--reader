@@ -382,6 +382,7 @@ li:before {
   opacity: 0.4;
   white-space: nowrap;
 }
+
 .srsMode,
 .backButton,
 .forwardButton {
@@ -506,5 +507,49 @@ li:before {
         padding: 2px;
       }
     }
+  }
+}
+
+.card-buttons__container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  margin-left: 10px;
+
+  .card-buttons {
+    height: 40px;
+    width: 100%;
+    background: #f8c045;
+    color: #173f0f;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 10px;
+    border: 2px solid #000;
+    box-shadow: 2px 1px 8px -1px black;
+    opacity: 0.4;
+    white-space: nowrap;
+
+    img {
+      height: 33px;
+      width: auto;
+      -webkit-transform: translateY(3px);
+      transform: translateY(3px);
+    }
+    &:first-of-type {
+      img {
+        height: 26px;
+        width: 26px;
+      }
+    }
+  }
+
+  .card-buttons:hover {
+    opacity: 1;
+    cursor: pointer;
+    transform: translateY(2px);
+  }
+
+  .card-buttons__inactive:hover {
+    cursor: not-allowed;
   }
 }

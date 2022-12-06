@@ -13,6 +13,8 @@ import {
   Upload as UploadIcon,
   Back as BackIcon,
   Forward as ForwardIcon,
+  FavoriteAdd as FavoriteAddIcon,
+  FavoriteRemove as FavoriteRemoveIcon,
 } from './Icons';
 import {
   chunkArrayInGroups,
@@ -192,8 +194,6 @@ class App extends Component {
     this.currentGroup = currentGroup;
     this.sentence = sentence;
     this.translation = translation;
-    if (scroll)
-      currentGroup.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
 
     currentGroup.classList.add('activeGroupHighlightStyle');
     switch (isNewGroup) {
@@ -203,6 +203,8 @@ class App extends Component {
         this.speech.setVoice(sentenceVoice.voice);
         this.speech.setLanguage(sentenceVoice.lang);
         this.speech.setRate(sentenceSpeed);
+        if (scroll)
+          currentGroup.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
         break;
       case this.isNewGroup.pass1:
         if (isReadingEachWordInTranslation) {
@@ -219,11 +221,6 @@ class App extends Component {
               return item;
             })
             .join(' ');
-          //   translation.innerHTML = this.currentWord.replace(
-          //     text,
-          //     `<span class="activeWordHighlightStyle">${text}</span>`
-          //   );
-          //   this.speech.setRate(1.0);
           break;
         }
         translation.classList.add('highlightStyle');
@@ -390,39 +387,18 @@ class App extends Component {
     }
   }
 
-  handleDoubleClick = (event) => {
-    const { target, detail } = event;
-    if (detail === 2) {
-      if (this.currentGroup) this.cleanUpHighlights();
+  handleDoubleClick = (clickedPosition) => {
+    // do nothing if playback hasn't started at all
+    if (this.state.shouldSpeak && !this.state.isPlaying) return;
+    // if playButton is pressed on the currently playing card. pause and unpause
+    if (this.state.currentPosition_defaultMode === clickedPosition) return this.play();
 
-      let clickedPosition = target.parentNode.parentNode.getAttribute('class');
-      clickedPosition = parseInt(clickedPosition.match(/\d+/g));
-
-      if (this.state.srsMode === this.srsMode.default) {
-        this.play();
-        return this.setState(
-          {
-            currentPosition_defaultMode: Math.max(clickedPosition, 0),
-            isNewGroup: this.isNewGroup.pass0,
-          },
-          () => {
-            this.updateReferenceToDOMSentenceElements();
-            this.cleanUpHighlights();
-            this.persistState();
-            this.play();
-          }
-        );
-      }
-
-      let currentPosition_shuffleModes = this.state.sortedData.findIndex((item) => {
-        return item === clickedPosition ? true : false;
-      });
-
-      this.play();
-      this.setState(
+    this.play();
+    this.cleanUpHighlights();
+    if (this.state.srsMode === this.srsMode.default) {
+      return this.setState(
         {
           currentPosition_defaultMode: Math.max(clickedPosition, 0),
-          currentPosition_shuffleModes,
           isNewGroup: this.isNewGroup.pass0,
         },
         () => {
@@ -433,6 +409,25 @@ class App extends Component {
         }
       );
     }
+
+    // below are the actions for shuffle modes
+    let currentPosition_shuffleModes = this.state.sortedData.findIndex((item) => {
+      return item === clickedPosition ? true : false;
+    });
+
+    this.setState(
+      {
+        currentPosition_defaultMode: Math.max(clickedPosition, 0),
+        currentPosition_shuffleModes,
+        isNewGroup: this.isNewGroup.pass0,
+      },
+      () => {
+        this.updateReferenceToDOMSentenceElements();
+        this.cleanUpHighlights();
+        this.persistState();
+        this.play();
+      }
+    );
   };
   handleSentenceVoiceChange = (sentenceVoice) => {
     this.setState(
@@ -666,7 +661,6 @@ class App extends Component {
   };
   render() {
     let { data, sortedData, currentPage } = this.state;
-    // console.log(JSON.stringify(data));
     sortedData = data[currentPage];
 
     return (
@@ -740,27 +734,46 @@ class App extends Component {
                 </div>
               </div>
             </header>
-            {/* <ol start="100"> */}
             <ol start={currentPage * this.itemsPerPage + 1}>
               {sortedData.map(({ translation, sentence, id, word, wordTranslations }, index) => {
                 return (
-                  <li
-                    className={`orator-${index} group_style`}
-                    key={id}
-                    // onClick={this.handleDoubleClick}
-                  >
+                  <li className={`orator-${index} group_style`} key={id}>
                     <div className="sentence-item">
-                      <h3 className="word-definition" onClick={this.handleDoubleClick}>
+                      <h3 className="word-definition">
                         <span className="tag-container">
                           {this.translationTags(wordTranslations, word)}
                         </span>
                       </h3>
-                      <p className="sentence sentence_style" onClick={this.handleDoubleClick}>
-                        {sentence}
-                      </p>
-                      <p className="translation translation_style" onClick={this.handleDoubleClick}>
-                        {translation}
-                      </p>
+                      <p className="sentence sentence_style">{sentence}</p>
+                      <p className="translation translation_style">{translation}</p>
+                    </div>
+                    <div className="card-buttons__container">
+                      <button class="card-buttons">
+                        <img src={FavoriteAddIcon} alt="Add as Favorite"></img>
+                      </button>
+                      <button
+                        class={`card-buttons ${
+                          this.state.shouldSpeak && !this.state.isPlaying
+                            ? 'card-buttons__inactive'
+                            : ''
+                        } `}
+                        style={{
+                          background:
+                            this.state.currentPosition_defaultMode === index ? 'red' : 'green',
+                        }}
+                        onClick={() => this.handleDoubleClick(index)}
+                      >
+                        <img
+                          src={
+                            this.state.shouldSpeak &&
+                            this.state.isPlaying &&
+                            this.state.currentPosition_defaultMode === index
+                              ? pauseIcon
+                              : playIcon
+                          }
+                          alt={this.state.shouldSpeak && this.state.isPlaying ? 'Pause' : 'Play'}
+                        ></img>
+                      </button>
                     </div>
                   </li>
                 );
