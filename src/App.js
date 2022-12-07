@@ -681,9 +681,9 @@ class App extends Component {
       (Math.max(currentPosition_shuffleModes, 0.1) / sortedData.length) * 100;
     const progressPercentage =
       srsMode === this.srsMode.default
-        ? progressPercentageDefaultMode + 1.5
-        : progressPercentageShuffleMode + 1.5;
-    const minimumWidthToShowProgress = 2;
+        ? progressPercentageDefaultMode
+        : progressPercentageShuffleMode;
+    const minimumWidthToShowProgress = 1;
     return (
       <>
         <div
