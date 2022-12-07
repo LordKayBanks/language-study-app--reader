@@ -311,7 +311,7 @@ class App extends Component {
                   this.state.srsMode !== this.srsMode.default &&
                   this.state.currentPosition_shuffleModes >= this.state.sortedData.length - 1
                 ) {
-                  //if this is the last group: other SRS Modes
+                  //if this is the last group: Shuffle Modes
                   this.cleanUpHighlights();
                   window.scroll({
                     top: 0,
@@ -599,33 +599,38 @@ class App extends Component {
       return alert('Unsupported type');
     }
     let jsonValue = JSON.parse(new TextDecoder().decode(e.target.result));
-    jsonValue = Object.entries(jsonValue)
-      .map(([word, value]) => {
-        const { examples, wordTranslations } = value;
-        return examples?.map((value) => {
-          return { ...value, word, wordTranslations };
-        });
-      })
-      .flat()
-      .map((item) => {
-        let Translation = '';
-        let originalText = '';
-        if (!item?.Translation || !item?.Subtitle) {
-          // data from Netflix
-          originalText = item?.text;
-          Translation = item?.translation;
-        } else {
-          originalText = item?.Subtitle;
-          Translation = item?.Translation;
-        }
+
+    const { Subtitles } = jsonValue;
+    // data from Netflix
+    if (Subtitles?.length) {
+      jsonValue = Subtitles.map(({ Subtitle, Translation }) => {
         return {
-          word: item?.word ?? '',
-          wordTranslations: item?.wordTranslations ?? [],
-          sentence: originalText,
-          translation: Translation.replace(/\[\w+\s*\w+?\]/g, '') /* [Sarah] or [John B] */,
+          sentence: Translation.replace(/\[\w+\s*\w+?\]/g, '') /* [Sarah] or [John B] */,
+          translation: Subtitle,
           id: uuid(),
         };
       });
+    } //standard JSON data
+    else {
+      jsonValue = Object.entries(jsonValue)
+        .map(([word, value]) => {
+          const { examples, wordTranslations } = value;
+          return examples?.map((value) => {
+            return { ...value, word, wordTranslations };
+          });
+        })
+        .flat()
+        .map(({ word, text, translation, wordTranslations }) => {
+          return {
+            word: word ?? '',
+            wordTranslations: wordTranslations ?? [],
+            sentence: text ?? '',
+            translation: translation ?? '',
+            id: uuid(),
+          };
+        });
+    }
+
     // console.log(JSON.stringify(jsonValue));
     jsonValue = chunkArrayInGroups(jsonValue, this.itemsPerPage);
     this.setState(
@@ -660,11 +665,40 @@ class App extends Component {
     return result;
   };
   render() {
-    let { data, sortedData, currentPage } = this.state;
+    let {
+      data,
+      sortedData,
+      currentPage,
+      srsMode,
+      currentPosition_defaultMode,
+      currentPosition_shuffleModes,
+    } = this.state;
     sortedData = data[currentPage];
 
+    const progressPercentageDefaultMode =
+      (Math.max(currentPosition_defaultMode, 0.1) / sortedData.length) * 100;
+    const progressPercentageShuffleMode =
+      (Math.max(currentPosition_shuffleModes, 0.1) / sortedData.length) * 100;
+    const progressPercentage =
+      srsMode === this.srsMode.default
+        ? progressPercentageDefaultMode + 1.5
+        : progressPercentageShuffleMode + 1.5;
+    const minimumWidthToShowProgress = 2;
     return (
       <>
+        <div
+          className="progress-bar"
+          style={{
+            display: progressPercentage > minimumWidthToShowProgress ? 'block' : 'none',
+          }}
+        >
+          <div
+            style={{
+              width: `${progressPercentage}%`,
+            }}
+          ></div>
+        </div>
+
         <div className="container">
           <section>
             <header className="bar">
@@ -789,15 +823,10 @@ class App extends Component {
             </button>
             <button
               className="scrollButton"
-              onClick={this.play}
-              style={{
-                background: this.state.shouldSpeak && this.state.isPlaying ? 'green' : 'red',
-              }}
+              onClick={this.toggleScrolling}
+              style={{ background: this.state.scroll ? 'green' : 'red' }}
             >
-              <img
-                src={this.state.shouldSpeak && this.state.isPlaying ? pauseIcon : playIcon}
-                alt={this.state.shouldSpeak && this.state.isPlaying ? 'Pause' : 'Play'}
-              ></img>
+              {this.state.scroll ? 'Scroll' : 'No Scroll'}
             </button>
             <button className="forwardButton" onClick={this.handleNextPage}>
               <img src={ForwardIcon} className="Upload-button" alt="Forward Button" />
@@ -811,15 +840,11 @@ class App extends Component {
                 ? 'Mode-' + parseInt(this.state.srsMode.match(/\d+/g))
                 : 'Default'}
             </button>
-            <button
-              className="scrollButton"
-              onClick={this.toggleScrolling}
-              style={{ background: this.state.scroll ? 'green' : 'red' }}
-            >
-              {this.state.scroll ? 'Scroll' : 'No Scroll'}
-            </button>
             <button className="scroll-to-top" onClick={this.handleScrollToTop}>
               Scroll To Top
+            </button>
+            <button className="scroll-to-top" onClick={() => {}}>
+              Settings
             </button>
           </div>
 

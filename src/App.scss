@@ -437,7 +437,6 @@ li:before {
     border-radius: 10px;
     border: 2px solid #000;
     box-shadow: 2px 1px 8px -1px black;
-    // opacity: 0.4;
     white-space: nowrap;
   }
 
@@ -551,5 +550,39 @@ li:before {
 
   .card-buttons__inactive:hover {
     cursor: not-allowed;
+  }
+}
+
+// ==============================
+.progress-bar {
+  position: fixed;
+  z-index: 50;
+  height: 10px;
+  width: 100%;
+  border-radius: 10px;
+  background-color: lightblue;
+
+  & > div {
+    width: 0%;
+    height: 100%;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    //   background-image: linear-gradient(to right, lightskyblue, blue);
+    background: rgb(63, 94, 251);
+    background: radial-gradient(circle, rgba(63, 94, 251, 0.8) 0%, rgba(252, 70, 107, 0.5) 100%);
+    background-size: 360px 100%;
+    animation: Animation 5s ease infinite;
+  }
+}
+
+@keyframes Animation {
+  0% {
+    background-position: 10% 0%;
+  }
+  50% {
+    background-position: 91% 100%;
+  }
+  100% {
+    background-position: 10% 0%;
   }
 }
