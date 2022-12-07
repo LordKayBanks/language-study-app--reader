@@ -676,14 +676,16 @@ class App extends Component {
     sortedData = data[currentPage];
 
     const progressPercentageDefaultMode =
-      (Math.max(currentPosition_defaultMode, 0.1) / sortedData.length) * 100;
+      ((currentPosition_defaultMode + 1) / sortedData.length) * 100;
     const progressPercentageShuffleMode =
-      (Math.max(currentPosition_shuffleModes, 0.1) / sortedData.length) * 100;
+      ((currentPosition_shuffleModes + 1) / sortedData.length) * 100;
     const progressPercentage =
       srsMode === this.srsMode.default
         ? progressPercentageDefaultMode
         : progressPercentageShuffleMode;
-    const minimumWidthToShowProgress = 1;
+    const minimumWidthToShowProgress = 2;
+
+    console.log({ progressPercentage, currentPosition_defaultMode, currentPosition_shuffleModes });
     return (
       <>
         <div
