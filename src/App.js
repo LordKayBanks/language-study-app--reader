@@ -694,7 +694,7 @@ class App extends Component {
         >
           <div
             style={{
-              width: `${progressPercentage}%`,
+              width: `${progressPercentage}vw`,
             }}
           ></div>
         </div>
