@@ -673,19 +673,17 @@ class App extends Component {
       currentPosition_defaultMode,
       currentPosition_shuffleModes,
     } = this.state;
-    sortedData = data[currentPage];
 
     const progressPercentageDefaultMode =
-      ((currentPosition_defaultMode + 1) / sortedData.length) * 100;
+      ((currentPosition_defaultMode + 1) / data[currentPage]?.length) * 100;
     const progressPercentageShuffleMode =
-      ((currentPosition_shuffleModes + 1) / sortedData.length) * 100;
+      ((currentPosition_shuffleModes + 1) / sortedData?.length) * 100;
     const progressPercentage =
       srsMode === this.srsMode.default
         ? progressPercentageDefaultMode
         : progressPercentageShuffleMode;
     const minimumWidthToShowProgress = 2;
 
-    console.log({ progressPercentage, currentPosition_defaultMode, currentPosition_shuffleModes });
     return (
       <>
         <div
@@ -696,7 +694,7 @@ class App extends Component {
         >
           <div
             style={{
-              width: `${progressPercentage}svw`,
+              width: `calc(${progressPercentage}vw - 5px)`,
             }}
           ></div>
         </div>
@@ -771,49 +769,51 @@ class App extends Component {
               </div>
             </header>
             <ol start={currentPage * this.itemsPerPage + 1}>
-              {sortedData.map(({ translation, sentence, id, word, wordTranslations }, index) => {
-                return (
-                  <li className={`orator-${index} group_style`} key={id}>
-                    <div className="sentence-item">
-                      <h3 className="word-definition">
-                        <span className="tag-container">
-                          {this.translationTags(wordTranslations, word)}
-                        </span>
-                      </h3>
-                      <p className="sentence sentence_style">{sentence}</p>
-                      <p className="translation translation_style">{translation}</p>
-                    </div>
-                    <div className="card-buttons__container">
-                      <button class="card-buttons">
-                        <img src={FavoriteAddIcon} alt="Add as Favorite"></img>
-                      </button>
-                      <button
-                        class={`card-buttons ${
-                          this.state.shouldSpeak && !this.state.isPlaying
-                            ? 'card-buttons__inactive'
-                            : ''
-                        } `}
-                        style={{
-                          background:
-                            this.state.currentPosition_defaultMode === index ? 'red' : 'green',
-                        }}
-                        onClick={() => this.handleDoubleClick(index)}
-                      >
-                        <img
-                          src={
-                            this.state.shouldSpeak &&
-                            this.state.isPlaying &&
-                            this.state.currentPosition_defaultMode === index
-                              ? pauseIcon
-                              : playIcon
-                          }
-                          alt={this.state.shouldSpeak && this.state.isPlaying ? 'Pause' : 'Play'}
-                        ></img>
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
+              {data[currentPage]?.map(
+                ({ translation, sentence, id, word, wordTranslations }, index) => {
+                  return (
+                    <li className={`orator-${index} group_style`} key={id}>
+                      <div className="sentence-item">
+                        <h3 className="word-definition">
+                          <span className="tag-container">
+                            {this.translationTags(wordTranslations, word)}
+                          </span>
+                        </h3>
+                        <p className="sentence sentence_style">{sentence}</p>
+                        <p className="translation translation_style">{translation}</p>
+                      </div>
+                      <div className="card-buttons__container">
+                        <button class="card-buttons">
+                          <img src={FavoriteAddIcon} alt="Add as Favorite"></img>
+                        </button>
+                        <button
+                          class={`card-buttons ${
+                            this.state.shouldSpeak && !this.state.isPlaying
+                              ? 'card-buttons__inactive'
+                              : ''
+                          } `}
+                          style={{
+                            background:
+                              this.state.currentPosition_defaultMode === index ? 'red' : 'green',
+                          }}
+                          onClick={() => this.handleDoubleClick(index)}
+                        >
+                          <img
+                            src={
+                              this.state.shouldSpeak &&
+                              this.state.isPlaying &&
+                              this.state.currentPosition_defaultMode === index
+                                ? pauseIcon
+                                : playIcon
+                            }
+                            alt={this.state.shouldSpeak && this.state.isPlaying ? 'Pause' : 'Play'}
+                          ></img>
+                        </button>
+                      </div>
+                    </li>
+                  );
+                }
+              )}
             </ol>
           </section>
         </div>

@@ -562,6 +562,7 @@ li:before {
   width: 100%;
   border-radius: 10px;
   background-color: lightblue;
+  box-shadow: -2px 4px 10px 0px rgba(0, 0, 0, 0.75);
 
   & > div {
     width: 0%;
@@ -572,8 +573,8 @@ li:before {
     //   background-image: linear-gradient(to right, lightskyblue, blue);
     background: rgb(63, 94, 251);
     background: radial-gradient(circle, rgba(63, 94, 251, 0.8) 0%, rgba(252, 70, 107, 0.8) 100%);
-    background-size: 360px 100%;
-    animation: Animation 3s ease infinite;
+    background-size: 50% 100%;
+    animation: Animation 2s ease infinite;
   }
 }
 
