@@ -337,16 +337,9 @@ li:before {
   padding: 5px 10px;
   border-radius: 5px;
 }
-.activeGroupHighlightStyle {
-  //   background: #21211d !important;
-  box-shadow: rgba(234, 224, 224, 0.74) 0px 5px 15px;
-  transform: scale(1.05);
-  transition: all 1s;
-}
 
 .lower-panel {
   position: fixed;
-  //   top: 90vh;
   top: calc(100vh - 120px); /* view height - panel height*/
   left: 50%;
   transform: translateX(-50%);
@@ -356,7 +349,8 @@ li:before {
 
   & > div {
     display: flex;
-    justify-content: center;
+    justify-content: space-around;
+    font-size: 14px;
 
     & img {
       height: 33px;
@@ -400,6 +394,13 @@ li:before {
   opacity: 1;
   cursor: pointer;
   transform: translateY(2px);
+}
+
+.activeGroupHighlightStyle {
+  background: #21211d !important;
+  box-shadow: rgba(234, 224, 224, 0.74) 0px 5px 15px;
+  transform: scale(1.05);
+  transition: all 3s;
 }
 
 .group_style {
@@ -566,26 +567,25 @@ li:before {
 
   & > div {
     width: 0%;
+    transition: width 1s ease 0s;
     height: 100%;
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
     border-right: 5px solid #000;
-    //   background-image: linear-gradient(to right, lightskyblue, blue);
-    background: rgb(63, 94, 251);
-    background: radial-gradient(circle, rgba(63, 94, 251, 0.8) 0%, rgba(252, 70, 107, 0.8) 100%);
-    background-size: 50% 100%;
-    animation: Animation 2s ease infinite;
+    background: #031ea7cc;
+    background: radial-gradient(circle, #031ea7cc 0, #ece1e3cc 100%);
+    background-size: 10px 100%;
+    animation: Animation 30s linear infinite;
+    animation-direction: normal;
+    animation-fill-mode: forwards;
   }
 }
 
 @keyframes Animation {
   0% {
-    background-position: 10% 0%;
-  }
-  50% {
-    background-position: 91% 100%;
+    background-position: 0 0%;
   }
   100% {
-    background-position: 10% 0%;
+    background-position: 100% 0%;
   }
 }

@@ -544,7 +544,16 @@ class App extends Component {
   };
 
   toggleScrolling = () => {
-    this.setState({ scroll: !this.state.scroll });
+    this.setState({ scroll: !this.state.scroll }, () => {
+      const { scroll } = this.state;
+      if (scroll) {
+        this.currentGroup.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest',
+        });
+      }
+    });
   };
   handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -684,6 +693,12 @@ class App extends Component {
         : progressPercentageShuffleMode;
     const minimumWidthToShowProgress = 2;
 
+    const activeCardIndex =
+      srsMode === this.srsMode.default ? currentPosition_defaultMode : currentPosition_shuffleModes;
+    const totalCardCount =
+      srsMode === this.srsMode.default ? data[currentPage]?.length : sortedData?.length;
+
+    const isPlaying = this.state.shouldSpeak && this.state.isPlaying;
     return (
       <>
         <div
@@ -695,6 +710,7 @@ class App extends Component {
           <div
             style={{
               width: `calc(${progressPercentage}vw - 5px)`,
+              'animation-iteration-count': `${isPlaying ? 'infinite' : 0}`,
             }}
           ></div>
         </div>
@@ -761,8 +777,8 @@ class App extends Component {
                   </div>
                   <button className="playback-button" onClick={this.play}>
                     <img
-                      src={this.state.shouldSpeak && this.state.isPlaying ? pauseIcon : playIcon}
-                      alt={this.state.shouldSpeak && this.state.isPlaying ? 'Pause' : 'Play'}
+                      src={isPlaying ? pauseIcon : playIcon}
+                      alt={isPlaying ? 'Pause' : 'Play'}
                     ></img>
                   </button>
                 </div>
@@ -800,13 +816,11 @@ class App extends Component {
                         >
                           <img
                             src={
-                              this.state.shouldSpeak &&
-                              this.state.isPlaying &&
-                              this.state.currentPosition_defaultMode === index
+                              isPlaying && this.state.currentPosition_defaultMode === index
                                 ? pauseIcon
                                 : playIcon
                             }
-                            alt={this.state.shouldSpeak && this.state.isPlaying ? 'Pause' : 'Play'}
+                            alt={isPlaying ? 'Pause' : 'Play'}
                           ></img>
                         </button>
                       </div>
@@ -818,7 +832,10 @@ class App extends Component {
           </section>
         </div>
         <div className="lower-panel">
-          <div>{`Page ${currentPage + 1} of ${data.length}`}</div>
+          <div>
+            <span>{`#${activeCardIndex + 1} of ${totalCardCount}`}</span>{' '}
+            <span>{`Page ${currentPage + 1} of ${data.length}`}</span>
+          </div>
           <div>
             <button className="backButton" onClick={this.handlePreviousPage}>
               <img src={BackIcon} className="Upload-button" alt="Back Button" />
