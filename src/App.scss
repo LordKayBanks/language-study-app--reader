@@ -580,6 +580,14 @@ li:before {
     animation-direction: normal;
     animation-fill-mode: forwards;
   }
+
+  //   anything below 768px
+  @media only screen and (max-width: 768px) {
+    height: 5px;
+    & > div {
+      background-size: 4px 100%;
+    }
+  }
 }
 
 @keyframes Animation {
