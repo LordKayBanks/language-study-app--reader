@@ -573,9 +573,10 @@ li:before {
     border-bottom-right-radius: 10px;
     border-right: 5px solid #000;
     background: #031ea7cc;
-    background: radial-gradient(circle, #031ea7cc 0, #ece1e3cc 100%);
+    // background: radial-gradient(circle, #031ea7cc 0, #ece1e3cc 100%);
+    background: radial-gradient(circle, #96dbfa 0, #000c 100%);
     background-size: 7px 100%;
-    animation: Animation 30s linear infinite;
+    animation: Animation 15s linear infinite;
     animation-direction: normal;
     animation-fill-mode: forwards;
   }
