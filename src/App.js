@@ -39,9 +39,14 @@ class App extends Component {
   currentGroup = null;
   sentence = null;
   translation = null;
-  currentWord = null;
+  previousTranslation = null;
   srsMode = { mode1: 'mode1', mode2: 'mode2', mode3: 'mode3', default: 'default' };
-  isNewGroup = { pass0: 'pass0', pass1: 'pass1', pass2: 'pass2' };
+  readingSequence = [
+    'read-primary-sentence',
+    'read-translation-full-sentence-1',
+    'pronounce-translation-each-word',
+    'read-translation-full-sentence-2',
+  ];
 
   constructor(props) {
     super(props);
@@ -74,8 +79,8 @@ class App extends Component {
       currentPage: currentPage,
       scroll: true,
       srsMode: srsMode,
-      isNewGroup: this.isNewGroup.pass0,
-      isReadingEachWordInTranslation: false,
+      positionInReadingSequence: 0,
+      shouldPronounceEachWord: true,
       wordPositionInTranslation: 0,
     };
     this.speech = new Speech(); // will throw an exception if not browser supported
@@ -147,16 +152,15 @@ class App extends Component {
   updateReferenceToDOMSentenceElements = () =>
     (this.allSentences = [...document.querySelectorAll('[class^="orator-"]')]);
 
-  cleanUpHighlights() {
-    this.sentence.classList.remove('highlightStyle');
-    this.translation.classList.remove('highlightStyle');
-    this.currentGroup.classList.remove('activeGroupHighlightStyle');
-    this.translation.textContent = this.currentWord;
-    this.setState({
-      isNewGroup: this.isNewGroup.pass0,
-      isReadingEachWordInTranslation: false,
-      wordPositionInTranslation: 0,
-    });
+  cleanUpHighlights(context) {
+    context.sentence.classList.remove('highlightStyle');
+    context.currentGroup.classList.remove('activeGroupHighlightStyle');
+    context.translation.classList.remove('highlightStyle');
+    context.translation.textContent = context.previousTranslation;
+    // context.setState({
+    //   positionInReadingSequence: 0,
+    //   wordPositionInTranslation: 0,
+    // });
   }
   play = () => {
     if (this.state.shouldSpeak && !this.state.isPlaying) {
@@ -175,8 +179,7 @@ class App extends Component {
   speak = () => {
     const {
       currentPosition_defaultMode,
-      isNewGroup,
-      isReadingEachWordInTranslation,
+      shouldPronounceEachWord,
       wordPositionInTranslation,
       sentenceVoice,
       sentenceSpeed,
@@ -194,42 +197,43 @@ class App extends Component {
     this.currentGroup = currentGroup;
     this.sentence = sentence;
     this.translation = translation;
-
     currentGroup.classList.add('activeGroupHighlightStyle');
-    switch (isNewGroup) {
-      case this.isNewGroup.pass0:
+
+    switch (this.readingSequence[this.state.positionInReadingSequence]) {
+      case this.readingSequence[0]:
         sentence.classList.add('highlightStyle');
         text = sentence.textContent.trim();
         this.speech.setVoice(sentenceVoice.voice);
         this.speech.setLanguage(sentenceVoice.lang);
         this.speech.setRate(sentenceSpeed);
-        if (scroll)
-          currentGroup.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        this.scrollActiveIntoView(scroll, this.currentGroup);
         break;
-      case this.isNewGroup.pass1:
-        if (isReadingEachWordInTranslation) {
-          this.currentWord = translation.textContent;
-          const textArray = translation.textContent.trim().split(' ');
-          text = textArray[wordPositionInTranslation];
-          let found = false;
-          translation.innerHTML = textArray
-            .map((item, index) => {
-              if (!found && index >= wordPositionInTranslation && item === text) {
-                found = true;
-                return `<span class="activeWordHighlightStyle">${text}</span>`;
-              }
-              return item;
-            })
-            .join(' ');
-          break;
-        }
+
+      case this.readingSequence[1]:
         translation.classList.add('highlightStyle');
         text = translation.textContent.trim();
         this.speech.setVoice(translationVoice.voice);
         this.speech.setLanguage(translationVoice.lang);
         this.speech.setRate(translationSpeed);
         break;
-      case this.isNewGroup.pass2:
+
+      case this.readingSequence[2]:
+        this.previousTranslation = translation.textContent;
+        const textArray = translation.textContent.trim().split(' ');
+        text = textArray[wordPositionInTranslation];
+        let found = false;
+        translation.innerHTML = textArray
+          .map((item, index) => {
+            if (!found && index >= wordPositionInTranslation && item === text) {
+              found = true;
+              return `<span class="activeWordHighlightStyle">${text}</span>`;
+            }
+            return item;
+          })
+          .join(' ');
+        break;
+
+      case this.readingSequence[3]:
         translation.classList.add('highlightStyle');
         text = translation.textContent.trim();
         this.speech.setVoice(translationVoice2.voice);
@@ -248,123 +252,7 @@ class App extends Component {
         queue: false, // false=current speech will be interrupted,
         listeners: {
           onstart: () => {},
-          onend: () => {
-            if (this.speech.speaking() || this.speech.pending()) return;
-
-            switch (isNewGroup) {
-              case this.isNewGroup.pass0:
-                this.setState({ isNewGroup: this.isNewGroup.pass1 }, () => {
-                  sentence.classList.remove('highlightStyle');
-                  this.speak();
-                });
-                break;
-
-              case this.isNewGroup.pass1:
-                if (!isReadingEachWordInTranslation) {
-                  //first time reading the translation
-                  this.setState({ isReadingEachWordInTranslation: true }, () => this.speak());
-                  break;
-                }
-                //this is where we iterate over and pronounce each word
-                const isReadingEachWord =
-                  isReadingEachWordInTranslation &&
-                  wordPositionInTranslation < translation.textContent.trim().split(' ').length - 1;
-                if (isReadingEachWord) {
-                  this.setState({ wordPositionInTranslation: wordPositionInTranslation + 1 }, () =>
-                    this.speak()
-                  );
-                } else {
-                  // this is the end of reading each word, moves it to the next phase
-                  this.setState(
-                    {
-                      isNewGroup: this.isNewGroup.pass2,
-                      isReadingEachWordInTranslation: false,
-                      wordPositionInTranslation: 0,
-                    },
-                    () => {
-                      this.cleanUpHighlights();
-                      this.speak();
-                    }
-                  );
-                }
-                break;
-
-              case this.isNewGroup.pass2:
-                if (
-                  this.state.srsMode === this.srsMode.default &&
-                  this.state.currentPosition_defaultMode >= this.allSentences.length - 1
-                ) {
-                  //if this is the last group: default SRS Mode
-                  this.cleanUpHighlights();
-                  window.scroll({
-                    top: 0,
-                    left: 0,
-                    behavior: 'smooth',
-                  });
-                  return this.setState({
-                    shouldSpeak: true,
-                    isPlaying: false,
-                    currentPosition_defaultMode: 0,
-                    isNewGroup: this.isNewGroup.pass0,
-                  });
-                } else if (
-                  this.state.srsMode !== this.srsMode.default &&
-                  this.state.currentPosition_shuffleModes >= this.state.sortedData.length - 1
-                ) {
-                  //if this is the last group: Shuffle Modes
-                  this.cleanUpHighlights();
-                  window.scroll({
-                    top: 0,
-                    left: 0,
-                    behavior: 'smooth',
-                  });
-                  return this.setState({
-                    shouldSpeak: true,
-                    isPlaying: false,
-                    currentPosition_shuffleModes: 0,
-                    isNewGroup: this.isNewGroup.pass0,
-                  });
-                }
-
-                // =================================================================
-                // =================================================================
-                if (this.state.srsMode === this.srsMode.default) {
-                  this.setState(
-                    (state, props) => {
-                      return {
-                        currentPosition_defaultMode: state.currentPosition_defaultMode + 1,
-                        isNewGroup: this.isNewGroup.pass0,
-                      };
-                    },
-                    () => {
-                      currentGroup.classList.remove('activeGroupHighlightStyle');
-                      translation.classList.remove('highlightStyle');
-                      this.speak();
-                    }
-                  );
-                } else {
-                  this.setState(
-                    (state, props) => {
-                      return {
-                        currentPosition_shuffleModes: state.currentPosition_shuffleModes + 1,
-                        currentPosition_defaultMode:
-                          state.sortedData[state.currentPosition_shuffleModes + 1],
-                        isNewGroup: this.isNewGroup.pass0,
-                      };
-                    },
-                    () => {
-                      currentGroup.classList.remove('activeGroupHighlightStyle');
-                      translation.classList.remove('highlightStyle');
-                      this.speak();
-                    }
-                  );
-                }
-                break;
-
-              default:
-                break;
-            }
-          },
+          onend: this.handleOnEnd,
           onresume: () => {
             console.log('🚀 ==> Resume utterance');
           },
@@ -378,6 +266,123 @@ class App extends Component {
         console.error('An error occurred :', e);
       });
     return;
+  };
+
+  handleOnEnd = (event) => {
+    if (this.speech.speaking() || this.speech.pending()) return;
+    const { shouldPronounceEachWord, wordPositionInTranslation } = this.state;
+
+    const { currentGroup, translation, srsMode, sentence, speak, cleanUpHighlights } = this;
+    switch (this.readingSequence[this.state.positionInReadingSequence]) {
+      // read the original text
+      case this.readingSequence[0]:
+        this.setState(
+          { positionInReadingSequence: this.state.positionInReadingSequence + 1 },
+          () => {
+            sentence.classList.remove('highlightStyle');
+            speak();
+          }
+        );
+        break;
+
+      // read translated sentence
+      case this.readingSequence[1]:
+        this.setState(
+          {
+            positionInReadingSequence: shouldPronounceEachWord
+              ? this.state.positionInReadingSequence + 1
+              : this.state.positionInReadingSequence + 2,
+          },
+          () => {
+            speak();
+          }
+        );
+        break;
+
+      //this is where we iterate over and pronounce each word
+      case this.readingSequence[2]:
+        const totalWordCount = translation.textContent.trim().split(' ').length - 1;
+        const canPronounceEachWord = wordPositionInTranslation < totalWordCount;
+        let update = {};
+
+        if (canPronounceEachWord) {
+          update = { wordPositionInTranslation: wordPositionInTranslation + 1 };
+        } else {
+          //  end of word pronunciation
+          update = {
+            wordPositionInTranslation: 0,
+            positionInReadingSequence: this.state.positionInReadingSequence + 1,
+          };
+        }
+
+        this.setState({ ...update }, () => {
+          if (!canPronounceEachWord) cleanUpHighlights(this);
+          speak();
+        });
+        break;
+
+      case this.readingSequence[3]:
+        const isLastGroup =
+          this.state.currentPosition_defaultMode >= this.allSentences.length - 1 ||
+          this.state.currentPosition_shuffleModes >= this.state.sortedData.length - 1;
+        const isLastGroupDefaultMode = this.state.srsMode === this.srsMode.default;
+        const isLastGroupShuffleModes = this.state.srsMode !== this.srsMode.default;
+
+        if (isLastGroup) {
+          update = {
+            shouldSpeak: true,
+            isPlaying: false,
+            positionInReadingSequence: 0,
+          };
+          if (isLastGroupDefaultMode) {
+            update = {
+              ...update,
+              currentPosition_defaultMode: 0,
+            };
+          } else if (isLastGroupShuffleModes) {
+            update = {
+              ...update,
+              currentPosition_shuffleModes: 0,
+            };
+          }
+
+          cleanUpHighlights(this);
+          window.scroll({
+            top: 0,
+            left: 0,
+            behavior: 'smooth',
+          });
+          return this.setState({ ...update });
+        }
+
+        // =================================================================
+        // =================================================================
+        const isDefaultSRSMode = this.state.srsMode === srsMode.default;
+        if (isDefaultSRSMode) {
+          update = {
+            currentPosition_defaultMode: this.state.currentPosition_defaultMode + 1,
+            positionInReadingSequence: 0,
+          };
+        } else {
+          update = {
+            currentPosition_shuffleModes: this.state.currentPosition_shuffleModes + 1,
+            currentPosition_defaultMode: this.state.sortedData[
+              this.state.currentPosition_shuffleModes + 1
+            ],
+            positionInReadingSequence: 0,
+          };
+        }
+
+        this.setState({ ...update }, () => {
+          currentGroup.classList.remove('activeGroupHighlightStyle');
+          translation.classList.remove('highlightStyle');
+          speak();
+        });
+        break;
+
+      default:
+        break;
+    }
   };
 
   handleBoundary(event) {
@@ -394,41 +399,33 @@ class App extends Component {
     if (this.state.currentPosition_defaultMode === clickedPosition) return this.play();
 
     this.play();
-    this.cleanUpHighlights();
+    this.cleanUpHighlights(this);
+    let updatePayload = {};
     if (this.state.srsMode === this.srsMode.default) {
-      return this.setState(
-        {
-          currentPosition_defaultMode: Math.max(clickedPosition, 0),
-          isNewGroup: this.isNewGroup.pass0,
-        },
-        () => {
-          this.updateReferenceToDOMSentenceElements();
-          this.cleanUpHighlights();
-          this.persistState();
-          this.play();
-        }
-      );
-    }
-
-    // below are the actions for shuffle modes
-    let currentPosition_shuffleModes = this.state.sortedData.findIndex((item) => {
-      return item === clickedPosition ? true : false;
-    });
-
-    this.setState(
-      {
+      updatePayload = {
+        currentPosition_defaultMode: Math.max(clickedPosition, 0),
+        positionInReadingSequence: 0,
+      };
+    } else {
+      // below are the actions for shuffle modes
+      let currentPosition_shuffleModes = this.state.sortedData.findIndex((item) => {
+        return item === clickedPosition ? true : false;
+      });
+      updatePayload = {
         currentPosition_defaultMode: Math.max(clickedPosition, 0),
         currentPosition_shuffleModes,
-        isNewGroup: this.isNewGroup.pass0,
-      },
-      () => {
-        this.updateReferenceToDOMSentenceElements();
-        this.cleanUpHighlights();
-        this.persistState();
-        this.play();
-      }
-    );
+        positionInReadingSequence: 0,
+      };
+    }
+
+    this.setState({ ...updatePayload }, () => {
+      this.updateReferenceToDOMSentenceElements();
+      this.cleanUpHighlights(this);
+      this.persistState();
+      this.play();
+    });
   };
+
   handleSentenceVoiceChange = (sentenceVoice) => {
     this.setState(
       {
@@ -506,8 +503,11 @@ class App extends Component {
     );
   };
 
+  togglePronounceEachWord = () => {
+    this.setState({ shouldPronounceEachWord: !this.state.shouldPronounceEachWord });
+  };
   toggleSRSMode = () => {
-    if (this.currentGroup) this.cleanUpHighlights();
+    if (this.currentGroup) this.cleanUpHighlights(this);
     const { currentPage, data } = this.state;
 
     let srsMode = this.srsMode.mode1;
@@ -543,21 +543,18 @@ class App extends Component {
     );
   };
 
+  scrollActiveIntoView(scroll, currentGroup) {
+    if (scroll)
+      currentGroup.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  }
   toggleScrolling = () => {
     this.setState({ scroll: !this.state.scroll }, () => {
       const { scroll } = this.state;
-      if (scroll) {
-        this.currentGroup.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'nearest',
-        });
-      }
+      this.scrollActiveIntoView(scroll, this.currentGroup);
     });
   };
   handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // this.setState({ scroll: false });
   };
 
   handlePreviousPage = () => {
@@ -568,12 +565,12 @@ class App extends Component {
           currentPage: Math.max(currentPage - 1, 0),
           currentPosition_defaultMode: 0,
           currentPosition_shuffleModes: 0,
-          isNewGroup: this.isNewGroup.pass0,
+          positionInReadingSequence: 0,
         };
       },
       () => {
         this.updateReferenceToDOMSentenceElements();
-        this.cleanUpHighlights();
+        this.cleanUpHighlights(this);
         this.persistState();
         this.handleScrollToTop();
         this.play();
@@ -588,12 +585,12 @@ class App extends Component {
           currentPage: Math.min(currentPage + 1, data.length - 1),
           currentPosition_defaultMode: 0,
           currentPosition_shuffleModes: 0,
-          isNewGroup: this.isNewGroup.pass0,
+          positionInReadingSequence: 0,
         };
       },
       () => {
         this.updateReferenceToDOMSentenceElements();
-        this.cleanUpHighlights();
+        this.cleanUpHighlights(this);
         this.persistState();
         this.handleScrollToTop();
         this.play();
@@ -862,7 +859,7 @@ class App extends Component {
             <button className="scroll-to-top" onClick={this.handleScrollToTop}>
               Scroll To Top
             </button>
-            <button className="scroll-to-top" onClick={() => {}}>
+            <button className="scroll-to-top" onClick={this.togglePronounceEachWord}>
               Settings
             </button>
           </div>
