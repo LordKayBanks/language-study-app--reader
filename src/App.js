@@ -80,8 +80,9 @@ class App extends Component {
       scroll: true,
       srsMode: srsMode,
       positionInReadingSequence: 0,
-      shouldPronounceEachWord: true,
       wordPositionInTranslation: 0,
+      shouldPronounceEachWord: true,
+      shouldAutomaticallyPlayNextPage: true,
     };
     this.speech = new Speech(); // will throw an exception if not browser supported
     if (this.speech.hasBrowserSupport()) {
@@ -347,12 +348,18 @@ class App extends Component {
           }
 
           cleanUpHighlights(this);
-          window.scroll({
-            top: 0,
-            left: 0,
-            behavior: 'smooth',
+          return this.setState({ ...update }, () => {
+            window.scroll({
+              top: 0,
+              left: 0,
+              behavior: 'smooth',
+            });
+            if (this.state.shouldAutomaticallyPlayNextPage) {
+              const duration_Sec = 1000;
+              this.handleNextPage();
+              setTimeout(() => this.play(), duration_Sec);
+            }
           });
-          return this.setState({ ...update });
         }
 
         // =================================================================
