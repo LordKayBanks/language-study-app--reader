@@ -41,11 +41,18 @@ class App extends Component {
   translation = null;
   previousTranslation = null;
   srsMode = { mode1: 'mode1', mode2: 'mode2', mode3: 'mode3', default: 'default' };
+
+  readingSequenceTypes = {
+    READ_PRIMARY_SENTENCE: 'READ-PRIMARY-SENTENCE',
+    READ_TRANSLATION_FULL_SENTENCE_1: 'READ-TRANSLATION-FULL-SENTENCE-1',
+    PRONOUNCE_EACH_WORD_IN_TRANSLATION: 'PRONOUNCE-EACH-WORD-IN-TRANSLATION',
+    READ_TRANSLATION_FULL_SENTENCE_2: 'READ-TRANSLATION-FULL-SENTENCE-2',
+  };
   readingSequence = [
-    'read-primary-sentence',
-    'read-translation-full-sentence-1',
-    'pronounce-translation-each-word',
-    'read-translation-full-sentence-2',
+    this.readingSequenceTypes.READ_PRIMARY_SENTENCE,
+    this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1,
+    this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION,
+    this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_2,
   ];
 
   constructor(props) {
@@ -157,7 +164,12 @@ class App extends Component {
     context.sentence.classList.remove('highlightStyle');
     context.currentGroup.classList.remove('activeGroupHighlightStyle');
     context.translation.classList.remove('highlightStyle');
-    context.translation.textContent = context.previousTranslation;
+    const translations = document.querySelectorAll('.translation');
+    translations.forEach((translation) => {
+      translation.textContent = translation.textContent;
+    });
+
+    // context.translation.textContent = context.previousTranslation;
   }
   play = () => {
     if (this.state.shouldSpeak && !this.state.isPlaying) {
@@ -176,7 +188,6 @@ class App extends Component {
   speak = () => {
     const {
       currentPosition_defaultMode,
-      shouldPronounceEachWord,
       wordPositionInTranslation,
       sentenceVoice,
       sentenceSpeed,
@@ -197,7 +208,7 @@ class App extends Component {
     currentGroup.classList.add('activeGroupHighlightStyle');
 
     switch (this.readingSequence[this.state.positionInReadingSequence]) {
-      case this.readingSequence[0]:
+      case this.readingSequenceTypes.READ_PRIMARY_SENTENCE:
         sentence.classList.add('highlightStyle');
         text = sentence.textContent.trim();
         this.speech.setVoice(sentenceVoice.voice);
@@ -206,7 +217,7 @@ class App extends Component {
         this.scrollActiveIntoView(scroll, this.currentGroup);
         break;
 
-      case this.readingSequence[1]:
+      case this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1:
         translation.classList.add('highlightStyle');
         text = translation.textContent.trim();
         this.speech.setVoice(translationVoice.voice);
@@ -214,7 +225,7 @@ class App extends Component {
         this.speech.setRate(translationSpeed);
         break;
 
-      case this.readingSequence[2]:
+      case this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION:
         this.previousTranslation = translation.textContent;
         const textArray = translation.textContent.trim().split(' ');
         text = textArray[wordPositionInTranslation];
@@ -230,7 +241,7 @@ class App extends Component {
           .join(' ');
         break;
 
-      case this.readingSequence[3]:
+      case this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_2:
         translation.classList.add('highlightStyle');
         text = translation.textContent.trim();
         this.speech.setVoice(translationVoice2.voice);
@@ -271,8 +282,7 @@ class App extends Component {
     const { sentence, speak } = this;
 
     switch (this.readingSequence[this.state.positionInReadingSequence]) {
-      // read the original text
-      case this.readingSequence[0]:
+      case this.readingSequenceTypes.READ_PRIMARY_SENTENCE:
         this.setState(
           { positionInReadingSequence: this.state.positionInReadingSequence + 1 },
           () => {
@@ -282,13 +292,20 @@ class App extends Component {
         );
         break;
 
-      // read translated sentence 1
-      case this.readingSequence[1]:
+      case this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1:
+        // const isPRONOUNCE_EACH_WORD_IN_TRANSLATION_Next =
+        //   this.readingSequence[this.state.positionInReadingSequence + 1] ===
+        //   this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION;
+        // const positionInReadingSequence =
+        //   shouldPronounceEachWord && isPRONOUNCE_EACH_WORD_IN_TRANSLATION_Next
+        //     ? this.state.positionInReadingSequence + 1
+        //     : this.state.positionInReadingSequence + 2;
+        const positionInReadingSequence = shouldPronounceEachWord
+          ? this.state.positionInReadingSequence + 1
+          : this.state.positionInReadingSequence + 2;
         this.setState(
           {
-            positionInReadingSequence: shouldPronounceEachWord
-              ? this.state.positionInReadingSequence + 1
-              : this.state.positionInReadingSequence + 2,
+            positionInReadingSequence,
           },
           () => {
             speak();
@@ -296,13 +313,11 @@ class App extends Component {
         );
         break;
 
-      //Iterate over and pronounce each word
-      case this.readingSequence[2]:
+      case this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION:
         this.pronounceEachWordInTranslation();
         break;
 
-      // read translated sentence 2
-      case this.readingSequence[3]:
+      case this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_2:
         this.handleLastTranslationItemOnPage();
         break;
 
@@ -369,8 +384,7 @@ class App extends Component {
     }
 
     this.setState({ ...updatePayload }, () => {
-      currentGroup.classList.remove('activeGroupHighlightStyle');
-      translation.classList.remove('highlightStyle');
+      this.cleanUpHighlights(this);
       speak();
     });
   };
@@ -382,14 +396,14 @@ class App extends Component {
     }
   }
 
-  handlePlay = (clickedPosition) => {
+  handleClickToPlay = (clickedPosition) => {
     // do nothing if playback hasn't started at all
     if (this.state.shouldSpeak && !this.state.isPlaying) return;
     // if playButton is pressed on the currently playing card. pause and unpause
     if (this.state.currentPosition_defaultMode === clickedPosition) return this.play();
 
     this.play();
-    this.cleanUpHighlights(this);
+    // this.cleanUpHighlights(this);
     let updatePayload = {};
     if (this.state.srsMode === this.srsMode.default) {
       updatePayload = {
@@ -408,7 +422,7 @@ class App extends Component {
       };
     }
 
-    this.setState({ ...updatePayload }, () => {
+    this.setState({ ...updatePayload, wordPositionInTranslation: 0 }, () => {
       this.updateReferenceToDOMSentenceElements();
       this.cleanUpHighlights(this);
       this.persistState();
@@ -573,8 +587,6 @@ class App extends Component {
     );
   };
   handleNextPage = () => {
-    // const { shouldAutomaticallyPlayNextPage } = this.state;
-    // shouldAutomaticallyPlayNextPage && this.play();
     this.play();
     this.setState(
       ({ currentPage, data }) => {
@@ -807,7 +819,7 @@ class App extends Component {
                             background:
                               this.state.currentPosition_defaultMode === index ? 'red' : 'green',
                           }}
-                          onClick={() => this.handlePlay(index)}
+                          onClick={() => this.handleClickToPlay(index)}
                         >
                           <img
                             src={
