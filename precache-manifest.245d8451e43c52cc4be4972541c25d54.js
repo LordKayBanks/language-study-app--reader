@@ -1,27 +1,27 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "d10a2af345004a42f575f2aff26ffe14",
+    "revision": "9d8614d5e244a764440bd55e43b6957a",
     "url": "/language-study-app--reader/index.html"
   },
   {
-    "revision": "e2f929655248aa82f179",
+    "revision": "beb138332137e625f076",
     "url": "/language-study-app--reader/static/css/2.82f03f93.chunk.css"
   },
   {
-    "revision": "4c42bb1a40513fd9985d",
-    "url": "/language-study-app--reader/static/css/main.4a120e6c.chunk.css"
+    "revision": "c191806a46d71e936c9d",
+    "url": "/language-study-app--reader/static/css/main.a68d43e3.chunk.css"
   },
   {
-    "revision": "e2f929655248aa82f179",
-    "url": "/language-study-app--reader/static/js/2.0c2a66d2.chunk.js"
+    "revision": "beb138332137e625f076",
+    "url": "/language-study-app--reader/static/js/2.5bc6ae62.chunk.js"
   },
   {
     "revision": "f032203ca460334c00de541c30a6078a",
-    "url": "/language-study-app--reader/static/js/2.0c2a66d2.chunk.js.LICENSE"
+    "url": "/language-study-app--reader/static/js/2.5bc6ae62.chunk.js.LICENSE"
   },
   {
-    "revision": "4c42bb1a40513fd9985d",
-    "url": "/language-study-app--reader/static/js/main.b57a29f1.chunk.js"
+    "revision": "c191806a46d71e936c9d",
+    "url": "/language-study-app--reader/static/js/main.f5e654a1.chunk.js"
   },
   {
     "revision": "3f7cacc9213404dc40e9",
