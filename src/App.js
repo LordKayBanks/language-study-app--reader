@@ -5,7 +5,6 @@ import FileReaderInput from 'react-file-reader-input';
 import { v4 as uuid } from 'uuid';
 
 import SpeedSlider from './modules/Components/SpeedSlider';
-
 import logoImage from './Icons/Logo.png';
 import {
   Pause as pauseIcon,
@@ -22,6 +21,7 @@ import {
   srsMode_1,
   srsMode_2,
   srsMode_3,
+  removeItemFromArray,
 } from './Utility/useful';
 import {
   sentenceVoice as defaultSentenceVoice,
@@ -32,15 +32,20 @@ import {
 import { mockData } from './data/french.data';
 import './App.scss';
 
+// https://www.npmjs.com/package/react-tagsinput#addkeys
+import { ModalComponent } from './components/modal.component';
+import TagsInput from 'react-tagsinput';
+import 'react-tagsinput/react-tagsinput.css';
+
 const storage = global.localStorage || null;
 class App extends Component {
-  itemsPerPage = 50;
+  itemsPerPage = 25;
   allSentences = [];
   currentGroup = null;
   sentence = null;
   translation = null;
   previousTranslation = null;
-  srsMode = { mode1: 'mode1', mode2: 'mode2', mode3: 'mode3', default: 'default' };
+  srsMode = { default: 'default', mode1: 'mode1', mode2: 'mode2', mode3: 'mode3' };
 
   readingSequenceTypes = {
     READ_PRIMARY_SENTENCE: 'READ_PRIMARY_SENTENCE',
@@ -50,21 +55,12 @@ class App extends Component {
   };
 
   // default setting
-  // readingSequence = [
-  //   this.readingSequenceTypes.READ_PRIMARY_SENTENCE,
-  //   this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1,
-  //   this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION,
-  //
-  //   this.readingSequenceTypes.END_SEQUENCE,
-  // ];
-
-  readingSequence = [
+  defaultReadingSequence = [
     this.readingSequenceTypes.READ_PRIMARY_SENTENCE,
+    this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION,
     this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1,
     this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1,
-    this.readingSequenceTypes.READ_PRIMARY_SENTENCE,
-    this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1,
-    //
+    // // //
     this.readingSequenceTypes.END_SEQUENCE,
   ];
 
@@ -82,6 +78,7 @@ class App extends Component {
     let sortedData = storedState?.sortedData ?? defaultSortedData;
     let currentPage = storedState?.currentPage ?? 0;
     let srsMode = storedState?.srsMode ?? this.srsMode.default;
+    let readingSequence = storedState?.readingSequence ?? this.defaultReadingSequence;
 
     this.state = {
       data: data,
@@ -102,6 +99,7 @@ class App extends Component {
       positionInReadingSequence: 0,
       wordPositionInTranslation: 0,
       shouldAutomaticallyPlayNextPage: true,
+      readingSequence: readingSequence,
     };
     this.speech = new Speech(); // will throw an exception if not browser supported
     if (this.speech.hasBrowserSupport()) {
@@ -221,7 +219,7 @@ class App extends Component {
     currentGroup.classList.add('activeGroupHighlightStyle');
 
     this.scrollActiveIntoView(scroll, this.currentGroup);
-    switch (this.readingSequence[this.state.positionInReadingSequence]) {
+    switch (this.state.readingSequence[this.state.positionInReadingSequence]) {
       case this.readingSequenceTypes.READ_PRIMARY_SENTENCE:
         sentence.classList.add('highlightStyle');
         text = sentence.textContent.trim();
@@ -252,14 +250,14 @@ class App extends Component {
             return item;
           })
           .join(' ');
+
+        this.speech.setVoice(translationVoice.voice);
+        this.speech.setLanguage(translationVoice.lang);
+        this.speech.setRate(translationSpeed);
         break;
 
       case this.readingSequenceTypes.END_SEQUENCE:
-        translation.classList.add('highlightStyle');
-        text = translation.textContent.trim();
-        this.speech.setVoice(translationVoice2.voice);
-        this.speech.setLanguage(translationVoice2.lang);
-        this.speech.setRate(translationSpeed);
+        text = '.';
         break;
 
       default:
@@ -293,7 +291,7 @@ class App extends Component {
   handleOnEnd = (event) => {
     if (this.speech.speaking() || this.speech.pending()) return;
 
-    switch (this.readingSequence[this.state.positionInReadingSequence]) {
+    switch (this.state.readingSequence[this.state.positionInReadingSequence]) {
       // ========================
       case this.readingSequenceTypes.READ_PRIMARY_SENTENCE:
         this.gotoNextReadingSequence();
@@ -609,7 +607,27 @@ class App extends Component {
       }
     );
   };
+  addTag = (tag) => {
+    const { readingSequence } = this.state;
+    let updatedReadingSequence = [...readingSequence];
+    updatedReadingSequence.push(tag);
+    this.handleReadingSequence(updatedReadingSequence);
+  };
 
+  handleReadingSequence = (readingSequence) => {
+    let update = [...readingSequence];
+    removeItemFromArray(update, this.readingSequenceTypes.END_SEQUENCE);
+    update.push(this.readingSequenceTypes.END_SEQUENCE);
+
+    this.setState(
+      {
+        readingSequence: update,
+      },
+      () => {
+        this.persistState();
+      }
+    );
+  };
   handleFileUpload = (event, results) => {
     if (!results.length) return;
 
@@ -708,7 +726,7 @@ class App extends Component {
     const totalCardCount =
       srsMode === this.srsMode.default ? data[currentPage]?.length : sortedData?.length;
 
-    const isPlaying = this.state.shouldSpeak && this.state.isPlaying;
+    const isCurrentlyPlaying = this.state.shouldSpeak && this.state.isPlaying;
     return (
       <>
         <div
@@ -720,7 +738,7 @@ class App extends Component {
           <div
             style={{
               width: `calc(${progressPercentage}vw - 5px)`,
-              'animation-iteration-count': `${isPlaying ? 'infinite' : 0}`,
+              'animation-iteration-count': `${isCurrentlyPlaying ? 'infinite' : 0}`,
             }}
           ></div>
         </div>
@@ -785,10 +803,31 @@ class App extends Component {
                       />
                     </FileReaderInput>
                   </div>
+                  <button
+                    className="playback-button"
+                    onClick={() => this.state.shouldSpeak && this.state.isPlaying && this.play()}
+                  >
+                    <ModalComponent>
+                      <div className="reading-sequence">
+                        {[...new Set(Object.values(this.defaultReadingSequence))].map((item) => {
+                          return (
+                            <button onClick={() => this.addTag(item)} key={item}>
+                              {item}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <TagsInput
+                        validate={(tag) => Object.values(this.readingSequenceTypes).includes(tag)}
+                        value={this.state.readingSequence}
+                        onChange={this.handleReadingSequence}
+                      />
+                    </ModalComponent>
+                  </button>
                   <button className="playback-button" onClick={this.play}>
                     <img
-                      src={isPlaying ? pauseIcon : playIcon}
-                      alt={isPlaying ? 'Pause' : 'Play'}
+                      src={isCurrentlyPlaying ? pauseIcon : playIcon}
+                      alt={isCurrentlyPlaying ? 'Pause' : 'Play'}
                     ></img>
                   </button>
                 </div>
@@ -826,11 +865,11 @@ class App extends Component {
                         >
                           <img
                             src={
-                              isPlaying && this.state.currentPosition_defaultMode === index
+                              isCurrentlyPlaying && this.state.currentPosition_defaultMode === index
                                 ? pauseIcon
                                 : playIcon
                             }
-                            alt={isPlaying ? 'Pause' : 'Play'}
+                            alt={isCurrentlyPlaying ? 'Pause' : 'Play'}
                           ></img>
                         </button>
                       </div>
@@ -853,9 +892,9 @@ class App extends Component {
             <button
               className="scrollButton"
               onClick={this.toggleScrolling}
-              style={{ background: this.state.scroll ? 'green' : 'red' }}
+              style={{ background: this.state.scroll ? 'red' : 'green' }}
             >
-              {this.state.scroll ? 'Scroll' : 'No Scroll'}
+              {this.state.scroll ? 'No Scroll' : 'Scroll'}
             </button>
             <button className="forwardButton" onClick={this.handleNextPage}>
               <img src={ForwardIcon} className="Upload-button" alt="Forward Button" />

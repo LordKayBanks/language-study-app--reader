@@ -56,9 +56,11 @@
     "prop-types": "^15.7.2",
     "rc-slider": "^8.7.1",
     "rc-tooltip": "^4.0.0-alpha.3",
+    "react-modal": "^3.16.1",
     "react-router-dom": "^5.1.2",
     "react-select": "^3.0.8",
     "react-swipeable": "^5.5.0",
+    "react-tagsinput": "^3.20.0",
     "speak-tts": "^2.0.8",
     "verge": "^1.10.2",
     "xregexp": "^4.2.4"

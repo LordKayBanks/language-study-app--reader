@@ -600,3 +600,23 @@ li:before {
     background-position: 100% 0%;
   }
 }
+
+.reading-sequence {
+  margin-bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+
+  button {
+    font-size: 10px;
+    font-weight: 500;
+    color: #f1f4f4;
+    margin-right: 4px;
+    padding: 6px;
+    border: 1px solid;
+    border-radius: 8px;
+    background: #2c382c;
+  }
+}
+.ReactModal__Overlay.ReactModal__Overlay--after-open {
+  background-color: #211717da !important;
+}

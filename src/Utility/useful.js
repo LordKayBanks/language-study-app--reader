@@ -74,6 +74,15 @@ export const defaultPlatformVoice =
         browser: 'other',
       };
 
+export const removeItemFromArray = (array, item) => {
+  var i = array.length;
+
+  while (i--) {
+    if (array[i] === item) {
+      array.splice(i, 1);
+    }
+  }
+};
 function shuffleArray(array) {
   let currentIndex = array.length,
     randomIndex;
