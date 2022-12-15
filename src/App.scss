@@ -326,6 +326,8 @@ li:before {
   font-weight: bold;
   padding: 3px;
   border-radius: 4px;
+
+  // transition: background 5s ease;
 }
 .highlightStyle {
   background-color: #fad961;
@@ -562,7 +564,7 @@ li:before {
   height: 8px;
   width: 100%;
   border-radius: 10px;
-  background-color: #ffc0cb6e;
+  background-color: #6b696b;
   box-shadow: -2px 4px 10px 0px rgba(0, 0, 0, 0.75);
 
   & > div {

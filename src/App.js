@@ -43,16 +43,29 @@ class App extends Component {
   srsMode = { mode1: 'mode1', mode2: 'mode2', mode3: 'mode3', default: 'default' };
 
   readingSequenceTypes = {
-    READ_PRIMARY_SENTENCE: 'READ-PRIMARY-SENTENCE',
-    READ_TRANSLATION_FULL_SENTENCE_1: 'READ-TRANSLATION-FULL-SENTENCE-1',
-    PRONOUNCE_EACH_WORD_IN_TRANSLATION: 'PRONOUNCE-EACH-WORD-IN-TRANSLATION',
-    READ_TRANSLATION_FULL_SENTENCE_2: 'READ-TRANSLATION-FULL-SENTENCE-2',
+    READ_PRIMARY_SENTENCE: 'READ_PRIMARY_SENTENCE',
+    READ_TRANSLATION_FULL_SENTENCE_1: 'READ_TRANSLATION_FULL_SENTENCE_1',
+    PRONOUNCE_EACH_WORD_IN_TRANSLATION: 'PRONOUNCE_EACH_WORD_IN_TRANSLATION',
+    END_SEQUENCE: 'END_SEQUENCE',
   };
+
+  // default setting
+  // readingSequence = [
+  //   this.readingSequenceTypes.READ_PRIMARY_SENTENCE,
+  //   this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1,
+  //   this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION,
+  //
+  //   this.readingSequenceTypes.END_SEQUENCE,
+  // ];
+
   readingSequence = [
     this.readingSequenceTypes.READ_PRIMARY_SENTENCE,
     this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1,
-    this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION,
-    this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_2,
+    this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1,
+    this.readingSequenceTypes.READ_PRIMARY_SENTENCE,
+    this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1,
+    //
+    this.readingSequenceTypes.END_SEQUENCE,
   ];
 
   constructor(props) {
@@ -88,7 +101,6 @@ class App extends Component {
       srsMode: srsMode,
       positionInReadingSequence: 0,
       wordPositionInTranslation: 0,
-      shouldPronounceEachWord: false,
       shouldAutomaticallyPlayNextPage: true,
     };
     this.speech = new Speech(); // will throw an exception if not browser supported
@@ -171,6 +183,7 @@ class App extends Component {
 
     // context.translation.textContent = context.previousTranslation;
   }
+
   play = () => {
     if (this.state.shouldSpeak && !this.state.isPlaying) {
       //start position
@@ -207,6 +220,7 @@ class App extends Component {
     this.translation = translation;
     currentGroup.classList.add('activeGroupHighlightStyle');
 
+    this.scrollActiveIntoView(scroll, this.currentGroup);
     switch (this.readingSequence[this.state.positionInReadingSequence]) {
       case this.readingSequenceTypes.READ_PRIMARY_SENTENCE:
         sentence.classList.add('highlightStyle');
@@ -214,7 +228,6 @@ class App extends Component {
         this.speech.setVoice(sentenceVoice.voice);
         this.speech.setLanguage(sentenceVoice.lang);
         this.speech.setRate(sentenceSpeed);
-        this.scrollActiveIntoView(scroll, this.currentGroup);
         break;
 
       case this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1:
@@ -241,7 +254,7 @@ class App extends Component {
           .join(' ');
         break;
 
-      case this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_2:
+      case this.readingSequenceTypes.END_SEQUENCE:
         translation.classList.add('highlightStyle');
         text = translation.textContent.trim();
         this.speech.setVoice(translationVoice2.voice);
@@ -250,10 +263,11 @@ class App extends Component {
         break;
 
       default:
+        text = 'There is nothing to read!';
         break;
     }
 
-    if (!text) text = 'There is nothing to read!';
+    // if (!text) text = 'There is nothing to read!';
     this.speech
       .speak({
         text: text,
@@ -278,50 +292,29 @@ class App extends Component {
 
   handleOnEnd = (event) => {
     if (this.speech.speaking() || this.speech.pending()) return;
-    const { shouldPronounceEachWord } = this.state;
-    const { sentence, speak } = this;
 
     switch (this.readingSequence[this.state.positionInReadingSequence]) {
+      // ========================
       case this.readingSequenceTypes.READ_PRIMARY_SENTENCE:
-        this.setState(
-          { positionInReadingSequence: this.state.positionInReadingSequence + 1 },
-          () => {
-            sentence.classList.remove('highlightStyle');
-            speak();
-          }
-        );
+        this.gotoNextReadingSequence();
         break;
 
       case this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1:
-        // const isPRONOUNCE_EACH_WORD_IN_TRANSLATION_Next =
-        //   this.readingSequence[this.state.positionInReadingSequence + 1] ===
-        //   this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION;
-        // const positionInReadingSequence =
-        //   shouldPronounceEachWord && isPRONOUNCE_EACH_WORD_IN_TRANSLATION_Next
-        //     ? this.state.positionInReadingSequence + 1
-        //     : this.state.positionInReadingSequence + 2;
-        const positionInReadingSequence = shouldPronounceEachWord
-          ? this.state.positionInReadingSequence + 1
-          : this.state.positionInReadingSequence + 2;
-        this.setState(
-          {
-            positionInReadingSequence,
-          },
-          () => {
-            speak();
-          }
-        );
+        this.gotoNextReadingSequence();
         break;
 
       case this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION:
         this.pronounceEachWordInTranslation();
         break;
+      // ========================
 
-      case this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_2:
-        this.handleLastTranslationItemOnPage();
+      case this.readingSequenceTypes.END_SEQUENCE:
+        this.gotoNextCardOrNextPage();
         break;
 
+      //handleLastTranslationItemOnPage
       default:
+        this.gotoNextPage();
         break;
     }
   };
@@ -348,46 +341,59 @@ class App extends Component {
       speak();
     });
   };
-
-  handleLastTranslationItemOnPage = () => {
-    const { currentGroup, translation, srsMode, speak, cleanUpHighlights } = this;
-    const { shouldAutomaticallyPlayNextPage } = this.state;
+  gotoNextCardOrNextPage() {
     let updatePayload = {};
+    let isLastGroup = false;
+    const isDefaultSRSMode = this.state.srsMode === this.srsMode.default;
+    if (isDefaultSRSMode) {
+      const currentPosition_defaultMode = this.state.currentPosition_defaultMode + 1;
+      isLastGroup = currentPosition_defaultMode >= this.allSentences.length;
+
+      updatePayload = {
+        currentPosition_defaultMode,
+        positionInReadingSequence: 0,
+      };
+    } else {
+      const currentPosition_shuffleModes = this.state.currentPosition_shuffleModes + 1;
+      isLastGroup = currentPosition_shuffleModes >= this.state.sortedData.length;
+
+      updatePayload = {
+        currentPosition_shuffleModes,
+        currentPosition_defaultMode: this.state.sortedData[currentPosition_shuffleModes],
+        positionInReadingSequence: 0,
+      };
+    }
+
+    if (isLastGroup) {
+      return this.gotoNextPage();
+    }
+    return this.setState({ ...updatePayload }, () => {
+      this.cleanUpHighlights(this);
+      this.speak();
+    });
+  }
+
+  gotoNextPage = () => {
+    const { shouldAutomaticallyPlayNextPage } = this.state;
     const isLastGroup =
       this.state.currentPosition_defaultMode >= this.allSentences.length - 1 ||
       this.state.currentPosition_shuffleModes >= this.state.sortedData.length - 1;
 
     if (isLastGroup) {
-      // cleanUpHighlights(this);
       window.scroll({ top: 0, left: 0, behavior: 'smooth' });
-      if (shouldAutomaticallyPlayNextPage) {
-        this.handleNextPage();
-      }
+      shouldAutomaticallyPlayNextPage && this.handleNextPage();
       return;
     }
-
-    // ===========================================
-    const isDefaultSRSMode = this.state.srsMode === srsMode.default;
-    if (isDefaultSRSMode) {
-      updatePayload = {
-        currentPosition_defaultMode: this.state.currentPosition_defaultMode + 1,
-        positionInReadingSequence: 0,
-      };
-    } else {
-      updatePayload = {
-        currentPosition_shuffleModes: this.state.currentPosition_shuffleModes + 1,
-        currentPosition_defaultMode: this.state.sortedData[
-          this.state.currentPosition_shuffleModes + 1
-        ],
-        positionInReadingSequence: 0,
-      };
-    }
-
-    this.setState({ ...updatePayload }, () => {
-      this.cleanUpHighlights(this);
-      speak();
-    });
   };
+
+  gotoNextReadingSequence() {
+    let { positionInReadingSequence } = this.state;
+    const newPositionInReadingSequence = positionInReadingSequence++;
+    this.setState({ positionInReadingSequence, newPositionInReadingSequence }, () => {
+      this.cleanUpHighlights(this);
+      this.speak();
+    });
+  }
 
   handleBoundary(event) {
     if (event.name === 'sentence') {
@@ -510,9 +516,6 @@ class App extends Component {
     );
   };
 
-  togglePronounceEachWord = () => {
-    this.setState({ shouldPronounceEachWord: !this.state.shouldPronounceEachWord });
-  };
   toggleSRSMode = () => {
     if (this.currentGroup) this.cleanUpHighlights(this);
     const { currentPage, data } = this.state;
@@ -869,9 +872,7 @@ class App extends Component {
             <button className="scroll-to-top" onClick={this.handleScrollToTop}>
               Scroll To Top
             </button>
-            <button className="scroll-to-top" onClick={this.togglePronounceEachWord}>
-              Settings
-            </button>
+            <button className="scroll-to-top">Settings</button>
           </div>
 
           {/* ================== */}
