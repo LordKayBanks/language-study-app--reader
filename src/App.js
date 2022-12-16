@@ -39,7 +39,7 @@ import 'react-tagsinput/react-tagsinput.css';
 
 const storage = global.localStorage || null;
 class App extends Component {
-  itemsPerPage = 25;
+  itemsPerPage = 30;
   allSentences = [];
   currentGroup = null;
   sentence = null;
@@ -552,7 +552,7 @@ class App extends Component {
   };
 
   scrollActiveIntoView(scroll, currentGroup) {
-    if (scroll)
+    if (scroll && currentGroup)
       currentGroup.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
   }
 
@@ -809,17 +809,21 @@ class App extends Component {
                   >
                     <ModalComponent>
                       <div className="reading-sequence">
-                        {[...new Set(Object.values(this.defaultReadingSequence))].map((item) => {
-                          return (
-                            <button onClick={() => this.addTag(item)} key={item}>
-                              {item}
-                            </button>
-                          );
-                        })}
+                        {[...new Set(Object.values(this.defaultReadingSequence))]
+                          .filter((item) => item !== this.readingSequenceTypes.END_SEQUENCE)
+                          .map((item) => {
+                            return (
+                              <button onClick={() => this.addTag(item)} key={item}>
+                                {item}
+                              </button>
+                            );
+                          })}
                       </div>
                       <TagsInput
                         validate={(tag) => Object.values(this.readingSequenceTypes).includes(tag)}
-                        value={this.state.readingSequence}
+                        value={this.state.readingSequence.filter(
+                          (item) => item !== this.readingSequenceTypes.END_SEQUENCE
+                        )}
                         onChange={this.handleReadingSequence}
                       />
                     </ModalComponent>
@@ -886,17 +890,27 @@ class App extends Component {
             <span>{`Page ${currentPage + 1} of ${data.length}`}</span>
           </div>
           <div>
-            <button className="backButton" onClick={this.handlePreviousPage}>
+            <button
+              className="backButton"
+              onClick={this.handlePreviousPage}
+              style={{ opacity: currentPage <= 0 ? '0.4' : '1' }}
+              disabled={currentPage <= 0}
+            >
               <img src={BackIcon} className="Upload-button" alt="Back Button" />
             </button>
             <button
               className="scrollButton"
               onClick={this.toggleScrolling}
-              style={{ background: this.state.scroll ? 'red' : 'green' }}
+              style={{ opacity: this.state.scroll ? '0.4' : '1' }}
             >
               {this.state.scroll ? 'No Scroll' : 'Scroll'}
             </button>
-            <button className="forwardButton" onClick={this.handleNextPage}>
+            <button
+              className="forwardButton"
+              onClick={this.handleNextPage}
+              style={{ opacity: currentPage >= data.length - 1 ? '0.4' : '1' }}
+              disabled={currentPage >= data.length - 1}
+            >
               <img src={ForwardIcon} className="Upload-button" alt="Forward Button" />
             </button>
           </div>

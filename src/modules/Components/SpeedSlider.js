@@ -12,7 +12,8 @@ const handle = (props) => {
     <Tooltip
       prefixCls="rc-slider-tooltip"
       overlay={value}
-      visible={dragging}
+      // visible={dragging}
+      visible={true}
       placement="top"
       key={index}
     >
@@ -28,7 +29,7 @@ const SpeedSlider = ({ handleSpeedChange, defaultSpeed, label }) => {
       <Slider
         min={0.5}
         max={2.0}
-        step={0.05}
+        step={0.1}
         defaultValue={defaultSpeed}
         handle={handle}
         onChange={handleSpeedChange}

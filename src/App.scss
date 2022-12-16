@@ -376,10 +376,16 @@ li:before {
   border-radius: 10px;
   border: 2px solid #000;
   box-shadow: 2px 1px 8px -1px black;
-  //   opacity: 0.4;
   white-space: nowrap;
+
+  &:disabled {
+    cursor: not-allowed !important;
+  }
 }
 
+.scrollButton {
+  background: #008b8b;
+}
 .srsMode,
 .backButton,
 .forwardButton {
@@ -620,3 +626,8 @@ li:before {
 .ReactModal__Overlay.ReactModal__Overlay--after-open {
   background-color: #211717da !important;
 }
+
+// .react-tagsinput-tag {
+//   font-size: 10px;
+//   font-weight: bold;
+// }
