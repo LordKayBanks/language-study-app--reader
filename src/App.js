@@ -303,6 +303,7 @@ class App extends Component {
         // text = this.highlightWordInTranslation();
         const EACH_WORD_SPEED = 0.8;
         translation.classList.add('highlightStyle');
+        this.highlightWordInTranslation(0);
         text = translation.textContent.trim();
 
         this.speech.setVoice(translationVoice.voice);
