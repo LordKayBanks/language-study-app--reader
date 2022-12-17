@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/language-study-app--reader/static/css/main.116801d7.chunk.css",
-    "main.js": "/language-study-app--reader/static/js/main.1aea3976.chunk.js",
-    "main.js.map": "/language-study-app--reader/static/js/main.1aea3976.chunk.js.map",
+    "main.js": "/language-study-app--reader/static/js/main.6eef8496.chunk.js",
+    "main.js.map": "/language-study-app--reader/static/js/main.6eef8496.chunk.js.map",
     "runtime-main.js": "/language-study-app--reader/static/js/runtime-main.d3d836eb.js",
     "runtime-main.js.map": "/language-study-app--reader/static/js/runtime-main.d3d836eb.js.map",
     "static/css/2.a2cd8a24.chunk.css": "/language-study-app--reader/static/css/2.a2cd8a24.chunk.css",
     "static/js/2.205779c1.chunk.js": "/language-study-app--reader/static/js/2.205779c1.chunk.js",
     "static/js/2.205779c1.chunk.js.map": "/language-study-app--reader/static/js/2.205779c1.chunk.js.map",
     "index.html": "/language-study-app--reader/index.html",
-    "precache-manifest.6aead8ef55f7355c76438b3863f1091b.js": "/language-study-app--reader/precache-manifest.6aead8ef55f7355c76438b3863f1091b.js",
+    "precache-manifest.17ad8a4c2b57af966b9c95a3937ac4b4.js": "/language-study-app--reader/precache-manifest.17ad8a4c2b57af966b9c95a3937ac4b4.js",
     "service-worker.js": "/language-study-app--reader/service-worker.js",
     "static/css/2.a2cd8a24.chunk.css.map": "/language-study-app--reader/static/css/2.a2cd8a24.chunk.css.map",
     "static/css/main.116801d7.chunk.css.map": "/language-study-app--reader/static/css/main.116801d7.chunk.css.map",
@@ -22,6 +22,6 @@
     "static/css/2.a2cd8a24.chunk.css",
     "static/js/2.205779c1.chunk.js",
     "static/css/main.116801d7.chunk.css",
-    "static/js/main.1aea3976.chunk.js"
+    "static/js/main.6eef8496.chunk.js"
   ]
 }
