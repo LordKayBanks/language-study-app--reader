@@ -257,7 +257,7 @@ class App extends Component {
         break;
 
       case this.readingSequenceTypes.END_SEQUENCE:
-        text = '.';
+        text = '!';
         break;
 
       default:
