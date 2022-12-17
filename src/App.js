@@ -56,8 +56,9 @@ class App extends Component {
 
   // default setting
   defaultReadingSequence = [
-    this.readingSequenceTypes.READ_PRIMARY_SENTENCE,
     this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION,
+    this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1,
+    this.readingSequenceTypes.READ_PRIMARY_SENTENCE,
     this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1,
     this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1,
     // // //
@@ -255,8 +256,7 @@ class App extends Component {
 
         this.speech.setVoice(translationVoice.voice);
         this.speech.setLanguage(translationVoice.lang);
-        this.speech.setRate(1.6);
-        // this.speech.setRate(translationSpeed);
+        this.speech.setRate(1.5);
         break;
 
       case this.readingSequenceTypes.END_SEQUENCE:
@@ -616,15 +616,9 @@ class App extends Component {
     let update = [...readingSequence];
     removeItemFromArray(update, this.readingSequenceTypes.END_SEQUENCE);
     update.push(this.readingSequenceTypes.END_SEQUENCE);
-
-    this.setState(
-      {
-        readingSequence: update,
-      },
-      () => {
-        this.persistState();
-      }
-    );
+    this.setState({ readingSequence: update }, () => {
+      this.persistState();
+    });
   };
   handleFileUpload = (event, results) => {
     if (!results.length) return;
@@ -803,19 +797,26 @@ class App extends Component {
                   </div>
                   <button
                     className="playback-button"
-                    onClick={() => this.state.shouldSpeak && this.state.isPlaying && this.play()}
+                    onClick={() => {
+                      this.state.shouldSpeak && this.state.isPlaying && this.play();
+                      const isEmpty = this.state.readingSequence.length === 1;
+                      if (isEmpty) this.setState({ readingSequence: this.defaultReadingSequence });
+                    }}
                   >
                     <ModalComponent>
                       <div className="reading-sequence">
-                        {[...new Set(Object.values(this.defaultReadingSequence))]
-                          .filter((item) => item !== this.readingSequenceTypes.END_SEQUENCE)
-                          .map((item) => {
-                            return (
-                              <button onClick={() => this.addTag(item)} key={item}>
-                                {item}
-                              </button>
-                            );
-                          })}
+                        <h3>Click tags below to add a Sequence</h3>
+                        <div>
+                          {[...new Set(Object.values(this.defaultReadingSequence))]
+                            .filter((item) => item !== this.readingSequenceTypes.END_SEQUENCE)
+                            .map((item) => {
+                              return (
+                                <button onClick={() => this.addTag(item)} key={item}>
+                                  {item}
+                                </button>
+                              );
+                            })}
+                        </div>
                       </div>
                       <TagsInput
                         validate={(tag) => Object.values(this.readingSequenceTypes).includes(tag)}

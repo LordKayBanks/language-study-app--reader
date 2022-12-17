@@ -608,26 +608,37 @@ li:before {
 }
 
 .reading-sequence {
-  margin-bottom: 10px;
+  margin: 10px auto;
   display: flex;
   flex-wrap: wrap;
+  flex-direction: column;
+
+  h3 {
+    color: black;
+    font-size: 14px;
+  }
 
   button {
     font-size: 10px;
     font-weight: 500;
     color: #f1f4f4;
     margin-right: 4px;
-    padding: 6px;
+    padding: 2px 5px;
     border: 1px solid;
     border-radius: 8px;
     background: #2c382c;
+
+    &:hover {
+      cursor: pointer;
+    }
   }
 }
 .ReactModal__Overlay.ReactModal__Overlay--after-open {
   background-color: #211717da !important;
+  transition: all 0.5s;
 }
 
-// .react-tagsinput-tag {
-//   font-size: 10px;
-//   font-weight: bold;
-// }
+.react-tagsinput-tag a::before {
+  font-size: 16px;
+  color: #f00;
+}
