@@ -257,31 +257,26 @@ class App extends Component {
         break;
 
       case this.readingSequenceTypes.END_SEQUENCE:
-        text = '!';
+        return this.handleOnEnd();
         break;
 
       default:
-        text = 'There is nothing to read!';
+        text = 'Empty text!';
         break;
     }
 
-    // if (!text) text = 'There is nothing to read!';
     this.speech
       .speak({
         text: text,
         queue: false, // false=current speech will be interrupted,
         listeners: {
-          onstart: () => {},
+          onstart: (event) => {},
           onend: this.handleOnEnd,
-          onresume: () => {
-            console.log('🚀 ==> Resume utterance');
-          },
+          onresume: (event) => {},
           onboundary: (event) => {},
         },
       })
-      .then(() => {
-        // console.log('then: Success !');
-      })
+      .then((result) => {})
       .catch((e) => {
         console.error('An error occurred :', e);
       });
