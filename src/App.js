@@ -303,7 +303,6 @@ class App extends Component {
         // text = this.highlightWordInTranslation();
         const EACH_WORD_SPEED = 0.8;
         translation.classList.add('highlightStyle');
-        this.highlightWordInTranslation(0);
         text = translation.textContent.trim();
 
         this.speech.setVoice(translationVoice.voice);
@@ -347,6 +346,7 @@ class App extends Component {
       this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1;
 
     if (isPronounceEachWord || isTranslation) {
+      this.highlightWordInTranslation(0);
       const wordPosition =
         this.translation.textContent.substring(0, charIndex + charLength).split(' ').length - 1;
       this.highlightWordInTranslation(wordPosition);
