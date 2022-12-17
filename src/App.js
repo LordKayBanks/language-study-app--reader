@@ -171,6 +171,18 @@ class App extends Component {
   updateReferenceToDOMSentenceElements = () =>
     (this.allSentences = [...document.querySelectorAll('[class^="orator-"]')]);
 
+  cleanUpHighlights(context) {
+    context.sentence.classList.remove('highlightStyle');
+    context.currentGroup.classList.remove('activeGroupHighlightStyle');
+    context.translation.classList.remove('highlightStyle');
+    const translations = document.querySelectorAll('.translation');
+    translations.forEach((translation) => {
+      translation.textContent = translation.textContent;
+    });
+
+    // context.translation.textContent = context.previousTranslation;
+  }
+
   highlightWordInTranslation = (wordPositionInTranslation) => {
     this.previousTranslation = this.translation.textContent;
     const textArray = this.translation.textContent.trim().split(' ');
@@ -188,17 +200,49 @@ class App extends Component {
     return text;
   };
 
-  cleanUpHighlights(context) {
-    context.sentence.classList.remove('highlightStyle');
-    context.currentGroup.classList.remove('activeGroupHighlightStyle');
-    context.translation.classList.remove('highlightStyle');
-    const translations = document.querySelectorAll('.translation');
-    translations.forEach((translation) => {
-      translation.textContent = translation.textContent;
-    });
+  pronounceEachWordInTranslation = (wordPositionInTranslation) => {
+    const { translation, speak, cleanUpHighlights } = this;
+    let updatePayload = {};
+    const totalWordCount = translation.textContent.trim().split(' ').length;
+    const canPronounceEachWord = wordPositionInTranslation === totalWordCount;
 
-    // context.translation.textContent = context.previousTranslation;
-  }
+    if (canPronounceEachWord) {
+      updatePayload = { wordPositionInTranslation };
+    } else {
+      //  end of word pronunciation
+      updatePayload = {
+        wordPositionInTranslation: 0,
+        positionInReadingSequence: this.state.positionInReadingSequence + 1,
+      };
+    }
+
+    this.setState({ ...updatePayload }, () => {
+      if (!canPronounceEachWord) cleanUpHighlights(this);
+      speak();
+    });
+  };
+  // pronounceEachWordInTranslation = () => {
+  //   const { wordPositionInTranslation } = this.state;
+  //   const { translation, speak, cleanUpHighlights } = this;
+  //   let updatePayload = {};
+  //   const totalWordCount = translation.textContent.trim().split(' ').length - 1;
+  //   const canPronounceEachWord = wordPositionInTranslation < totalWordCount;
+
+  //   if (canPronounceEachWord) {
+  //     updatePayload = { wordPositionInTranslation: wordPositionInTranslation + 1 };
+  //   } else {
+  //     //  end of word pronunciation
+  //     updatePayload = {
+  //       wordPositionInTranslation: 0,
+  //       positionInReadingSequence: this.state.positionInReadingSequence + 1,
+  //     };
+  //   }
+
+  //   this.setState({ ...updatePayload }, () => {
+  //     if (!canPronounceEachWord) cleanUpHighlights(this);
+  //     speak();
+  //   });
+  // };
 
   play = () => {
     if (this.state.shouldSpeak && !this.state.isPlaying) {
@@ -257,12 +301,12 @@ class App extends Component {
 
       case this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION:
         // text = this.highlightWordInTranslation();
+        const EACH_WORD_SPEED = 0.8;
         translation.classList.add('highlightStyle');
         text = translation.textContent.trim();
 
         this.speech.setVoice(translationVoice.voice);
         this.speech.setLanguage(translationVoice.lang);
-        const EACH_WORD_SPEED = 0.7;
         this.speech.setRate(EACH_WORD_SPEED);
         break;
 
@@ -281,12 +325,12 @@ class App extends Component {
         queue: false, // false=current speech will be interrupted,
         listeners: {
           onstart: (event) => {},
-          onend: this.handleOnEnd,
           onresume: (event) => {},
+          onend: this.handleOnEnd,
           onboundary: this.onBoundary,
         },
       })
-      .then((result) => {})
+      .then((success) => {})
       .catch((e) => {
         console.error('An error occurred :', e);
       });
@@ -322,7 +366,7 @@ class App extends Component {
         break;
 
       case this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION:
-        this.pronounceEachWordInTranslation();
+        this.pronounceEachWordInTranslation(0);
         break;
       // ========================
 
@@ -337,49 +381,6 @@ class App extends Component {
     }
   };
 
-  pronounceEachWordInTranslation = (wordPositionInTranslation) => {
-    const { translation, speak, cleanUpHighlights } = this;
-    let updatePayload = {};
-    const totalWordCount = translation.textContent.trim().split(' ').length;
-    const canPronounceEachWord = wordPositionInTranslation === totalWordCount;
-
-    if (canPronounceEachWord) {
-      updatePayload = { wordPositionInTranslation };
-    } else {
-      //  end of word pronunciation
-      updatePayload = {
-        wordPositionInTranslation: 0,
-        positionInReadingSequence: this.state.positionInReadingSequence + 1,
-      };
-    }
-
-    this.setState({ ...updatePayload }, () => {
-      if (!canPronounceEachWord) cleanUpHighlights(this);
-      speak();
-    });
-  };
-  // pronounceEachWordInTranslation = () => {
-  //   const { wordPositionInTranslation } = this.state;
-  //   const { translation, speak, cleanUpHighlights } = this;
-  //   let updatePayload = {};
-  //   const totalWordCount = translation.textContent.trim().split(' ').length - 1;
-  //   const canPronounceEachWord = wordPositionInTranslation < totalWordCount;
-
-  //   if (canPronounceEachWord) {
-  //     updatePayload = { wordPositionInTranslation: wordPositionInTranslation + 1 };
-  //   } else {
-  //     //  end of word pronunciation
-  //     updatePayload = {
-  //       wordPositionInTranslation: 0,
-  //       positionInReadingSequence: this.state.positionInReadingSequence + 1,
-  //     };
-  //   }
-
-  //   this.setState({ ...updatePayload }, () => {
-  //     if (!canPronounceEachWord) cleanUpHighlights(this);
-  //     speak();
-  //   });
-  // };
   gotoNextCardOrNextPage() {
     let updatePayload = {};
     let isLastGroup = false;
