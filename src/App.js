@@ -234,7 +234,7 @@ class App extends Component {
         this.speech.setVoice(translationVoice.voice);
         this.speech.setLanguage(translationVoice.lang);
 
-        if (text.split(' ').length > 5 && !text.includes(',')) this.speech.setRate(0.8);
+        if (text.split(' ').length > 5 && !text.includes(',')) this.speech.setRate(1.0);
         else this.speech.setRate(translationSpeed);
         break;
 
@@ -255,7 +255,8 @@ class App extends Component {
 
         this.speech.setVoice(translationVoice.voice);
         this.speech.setLanguage(translationVoice.lang);
-        this.speech.setRate(translationSpeed);
+        this.speech.setRate(1.6);
+        // this.speech.setRate(translationSpeed);
         break;
 
       case this.readingSequenceTypes.END_SEQUENCE:
