@@ -233,7 +233,9 @@ class App extends Component {
         text = translation.textContent.trim();
         this.speech.setVoice(translationVoice.voice);
         this.speech.setLanguage(translationVoice.lang);
-        this.speech.setRate(translationSpeed);
+
+        if (text.split(' ').length > 5 && !text.includes(',')) this.speech.setRate(0.8);
+        else this.speech.setRate(translationSpeed);
         break;
 
       case this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION:
