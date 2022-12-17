@@ -39,7 +39,7 @@ import 'react-tagsinput/react-tagsinput.css';
 
 const storage = global.localStorage || null;
 class App extends Component {
-  itemsPerPage = 30;
+  itemsPerPage = 50;
   allSentences = [];
   currentGroup = null;
   sentence = null;
