@@ -171,6 +171,23 @@ class App extends Component {
   updateReferenceToDOMSentenceElements = () =>
     (this.allSentences = [...document.querySelectorAll('[class^="orator-"]')]);
 
+  highlightWordInTranslation = (wordPositionInTranslation) => {
+    this.previousTranslation = this.translation.textContent;
+    const textArray = this.translation.textContent.trim().split(' ');
+    const text = textArray[wordPositionInTranslation];
+    let found = false;
+    this.translation.innerHTML = textArray
+      .map((item, index) => {
+        if (!found && index >= wordPositionInTranslation && item === text) {
+          found = true;
+          return `<span class="activeWordHighlightStyle">${text}</span>`;
+        }
+        return item;
+      })
+      .join(' ');
+    return text;
+  };
+
   cleanUpHighlights(context) {
     context.sentence.classList.remove('highlightStyle');
     context.currentGroup.classList.remove('activeGroupHighlightStyle');
@@ -200,7 +217,6 @@ class App extends Component {
   speak = () => {
     const {
       currentPosition_defaultMode,
-      wordPositionInTranslation,
       sentenceVoice,
       sentenceSpeed,
       translationVoice,
@@ -240,23 +256,14 @@ class App extends Component {
         break;
 
       case this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION:
-        this.previousTranslation = translation.textContent;
-        const textArray = translation.textContent.trim().split(' ');
-        text = textArray[wordPositionInTranslation];
-        let found = false;
-        translation.innerHTML = textArray
-          .map((item, index) => {
-            if (!found && index >= wordPositionInTranslation && item === text) {
-              found = true;
-              return `<span class="activeWordHighlightStyle">${text}</span>`;
-            }
-            return item;
-          })
-          .join(' ');
+        // text = this.highlightWordInTranslation();
+        translation.classList.add('highlightStyle');
+        text = translation.textContent.trim();
 
         this.speech.setVoice(translationVoice.voice);
         this.speech.setLanguage(translationVoice.lang);
-        this.speech.setRate(1.5);
+        const EACH_WORD_SPEED = 0.7;
+        this.speech.setRate(EACH_WORD_SPEED);
         break;
 
       case this.readingSequenceTypes.END_SEQUENCE:
@@ -276,7 +283,7 @@ class App extends Component {
           onstart: (event) => {},
           onend: this.handleOnEnd,
           onresume: (event) => {},
-          onboundary: (event) => {},
+          onboundary: this.onBoundary,
         },
       })
       .then((result) => {})
@@ -284,6 +291,21 @@ class App extends Component {
         console.error('An error occurred :', e);
       });
     return;
+  };
+
+  onBoundary = ({ charIndex, charLength }) => {
+    const isPronounceEachWord =
+      this.state.readingSequence[this.state.positionInReadingSequence] ===
+      this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION;
+    const isTranslation =
+      this.state.readingSequence[this.state.positionInReadingSequence] ===
+      this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1;
+
+    if (isPronounceEachWord || isTranslation) {
+      const wordPosition =
+        this.translation.textContent.substring(0, charIndex + charLength).split(' ').length - 1;
+      this.highlightWordInTranslation(wordPosition);
+    }
   };
 
   handleOnEnd = (event) => {
@@ -315,15 +337,14 @@ class App extends Component {
     }
   };
 
-  pronounceEachWordInTranslation = () => {
-    const { wordPositionInTranslation } = this.state;
+  pronounceEachWordInTranslation = (wordPositionInTranslation) => {
     const { translation, speak, cleanUpHighlights } = this;
     let updatePayload = {};
-    const totalWordCount = translation.textContent.trim().split(' ').length - 1;
-    const canPronounceEachWord = wordPositionInTranslation < totalWordCount;
+    const totalWordCount = translation.textContent.trim().split(' ').length;
+    const canPronounceEachWord = wordPositionInTranslation === totalWordCount;
 
     if (canPronounceEachWord) {
-      updatePayload = { wordPositionInTranslation: wordPositionInTranslation + 1 };
+      updatePayload = { wordPositionInTranslation };
     } else {
       //  end of word pronunciation
       updatePayload = {
@@ -337,6 +358,28 @@ class App extends Component {
       speak();
     });
   };
+  // pronounceEachWordInTranslation = () => {
+  //   const { wordPositionInTranslation } = this.state;
+  //   const { translation, speak, cleanUpHighlights } = this;
+  //   let updatePayload = {};
+  //   const totalWordCount = translation.textContent.trim().split(' ').length - 1;
+  //   const canPronounceEachWord = wordPositionInTranslation < totalWordCount;
+
+  //   if (canPronounceEachWord) {
+  //     updatePayload = { wordPositionInTranslation: wordPositionInTranslation + 1 };
+  //   } else {
+  //     //  end of word pronunciation
+  //     updatePayload = {
+  //       wordPositionInTranslation: 0,
+  //       positionInReadingSequence: this.state.positionInReadingSequence + 1,
+  //     };
+  //   }
+
+  //   this.setState({ ...updatePayload }, () => {
+  //     if (!canPronounceEachWord) cleanUpHighlights(this);
+  //     speak();
+  //   });
+  // };
   gotoNextCardOrNextPage() {
     let updatePayload = {};
     let isLastGroup = false;
