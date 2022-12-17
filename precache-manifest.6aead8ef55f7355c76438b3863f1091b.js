@@ -1,6 +1,6 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "ab5b0d238b7485d51573701c068e3de7",
+    "revision": "0374c903093eb5527dfe183f798e0723",
     "url": "/language-study-app--reader/index.html"
   },
   {
@@ -8,7 +8,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/language-study-app--reader/static/css/2.a2cd8a24.chunk.css"
   },
   {
-    "revision": "71d5b448d3e01c16d10a",
+    "revision": "c752f3eda1f557f6f226",
     "url": "/language-study-app--reader/static/css/main.116801d7.chunk.css"
   },
   {
@@ -20,8 +20,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/language-study-app--reader/static/js/2.205779c1.chunk.js.LICENSE"
   },
   {
-    "revision": "71d5b448d3e01c16d10a",
-    "url": "/language-study-app--reader/static/js/main.5fe4b8cd.chunk.js"
+    "revision": "c752f3eda1f557f6f226",
+    "url": "/language-study-app--reader/static/js/main.1aea3976.chunk.js"
   },
   {
     "revision": "3f7cacc9213404dc40e9",
