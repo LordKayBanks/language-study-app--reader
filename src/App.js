@@ -84,24 +84,34 @@ class App extends Component {
     this.state = {
       data: data,
       sortedData: sortedData,
+      currentPage: currentPage,
+
+      //
+      shouldSpeak: true,
+      isPlaying: false,
+      currentPosition_defaultMode: 0,
+      currentPosition_shuffleModes: 0,
+      scroll: true,
+
+      //
+      srsMode: srsMode,
+      readingSequence: readingSequence,
+      positionInReadingSequence: 0,
+      wordPositionInTranslation: 0,
+      shouldAutomaticallyPlayNextPage: true,
+      //
+      loopCurrentPage: false,
+      loopCollection: true,
+
+      //
       voiceList: [],
       sentenceSpeed: sentenceSpeed,
       sentenceVoice: sentenceVoice,
       translationSpeed: translationSpeed,
       translationVoice: translationVoice,
       translationVoice2: translationVoice2,
-      shouldSpeak: true,
-      isPlaying: false,
-      currentPosition_defaultMode: 0,
-      currentPosition_shuffleModes: 0,
-      currentPage: currentPage,
-      scroll: true,
-      srsMode: srsMode,
-      positionInReadingSequence: 0,
-      wordPositionInTranslation: 0,
-      shouldAutomaticallyPlayNextPage: true,
-      readingSequence: readingSequence,
     };
+
     this.speech = new Speech(); // will throw an exception if not browser supported
     if (this.speech.hasBrowserSupport()) {
       // returns a boolean
@@ -244,6 +254,14 @@ class App extends Component {
   //   });
   // };
 
+  moveToNextReadingSequence = () => {
+    let { positionInReadingSequence } = this.state;
+    this.setState({ positionInReadingSequence: positionInReadingSequence + 1 }, () => {
+      this.cleanUpHighlights(this);
+      this.speak();
+    });
+  };
+
   play = () => {
     if (this.state.shouldSpeak && !this.state.isPlaying) {
       //start position
@@ -327,7 +345,7 @@ class App extends Component {
           onstart: (event) => {},
           onresume: (event) => {},
           onend: this.handleOnEnd,
-          onboundary: this.onBoundary,
+          onboundary: this.handleBoundary,
         },
       })
       .then((success) => {})
@@ -337,7 +355,8 @@ class App extends Component {
     return;
   };
 
-  onBoundary = ({ charIndex, charLength }) => {
+  handleBoundary = ({ charIndex, charLength }) => {
+    // if (event.name === 'sentence')
     const isPronounceEachWord =
       this.state.readingSequence[this.state.positionInReadingSequence] ===
       this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION;
@@ -359,11 +378,11 @@ class App extends Component {
     switch (this.state.readingSequence[this.state.positionInReadingSequence]) {
       // ========================
       case this.readingSequenceTypes.READ_PRIMARY_SENTENCE:
-        this.gotoNextReadingSequence();
+        this.moveToNextReadingSequence();
         break;
 
       case this.readingSequenceTypes.READ_TRANSLATION_FULL_SENTENCE_1:
-        this.gotoNextReadingSequence();
+        this.moveToNextReadingSequence();
         break;
 
       case this.readingSequenceTypes.PRONOUNCE_EACH_WORD_IN_TRANSLATION:
@@ -372,7 +391,7 @@ class App extends Component {
       // ========================
 
       case this.readingSequenceTypes.END_SEQUENCE:
-        this.gotoNextCardOrNextPage();
+        this.gotoNextPageOrGotoNextCard();
         break;
 
       //handleLastTranslationItemOnPage
@@ -382,31 +401,46 @@ class App extends Component {
     }
   };
 
-  gotoNextCardOrNextPage() {
+  gotoNextPageOrGotoNextCard() {
+    const {
+      currentPosition_defaultMode,
+      currentPosition_shuffleModes,
+      sortedData,
+      currentPage,
+      data,
+      loopCollection,
+      loopCurrentPage,
+    } = this.state;
+    const { allSentences } = this;
+    const isLastGroupInCollection = currentPage >= data.length - 1;
+    let isLastGroupOnPage =
+      currentPosition_defaultMode >= allSentences.length - 1 ||
+      currentPosition_shuffleModes >= sortedData.length - 1;
+
+    if (isLastGroupOnPage) {
+      if (loopCurrentPage) return this.playSpecificPage(currentPage);
+
+      if (isLastGroupInCollection) {
+        if (loopCollection) return this.playSpecificPage();
+        return;
+      }
+      return this.gotoNextPage();
+    }
+
+    // next Card =======================
     let updatePayload = {};
-    let isLastGroup = false;
     const isDefaultSRSMode = this.state.srsMode === this.srsMode.default;
     if (isDefaultSRSMode) {
-      const currentPosition_defaultMode = this.state.currentPosition_defaultMode + 1;
-      isLastGroup = currentPosition_defaultMode >= this.allSentences.length;
-
       updatePayload = {
-        currentPosition_defaultMode,
+        currentPosition_defaultMode: currentPosition_defaultMode + 1,
         positionInReadingSequence: 0,
       };
     } else {
-      const currentPosition_shuffleModes = this.state.currentPosition_shuffleModes + 1;
-      isLastGroup = currentPosition_shuffleModes >= this.state.sortedData.length;
-
       updatePayload = {
-        currentPosition_shuffleModes,
+        currentPosition_shuffleModes: currentPosition_shuffleModes + 1,
         currentPosition_defaultMode: this.state.sortedData[currentPosition_shuffleModes],
         positionInReadingSequence: 0,
       };
-    }
-
-    if (isLastGroup) {
-      return this.gotoNextPage();
     }
     return this.setState({ ...updatePayload }, () => {
       this.cleanUpHighlights(this);
@@ -427,21 +461,64 @@ class App extends Component {
     }
   };
 
-  gotoNextReadingSequence() {
-    let { positionInReadingSequence } = this.state;
-    const newPositionInReadingSequence = positionInReadingSequence++;
-    this.setState({ positionInReadingSequence, newPositionInReadingSequence }, () => {
-      this.cleanUpHighlights(this);
-      this.speak();
-    });
+  playSpecificPage(pageNumber = 0) {
+    this.play();
+    return this.setState(
+      {
+        currentPage: pageNumber,
+        positionInReadingSequence: 0,
+        currentPosition_defaultMode: 0,
+        currentPosition_shuffleModes: 0,
+      },
+      () => {
+        this.cleanUpHighlights(this);
+        this.updateReferenceToDOMSentenceElements();
+        this.handleScrollToTop();
+        this.play();
+        this.persistState();
+      }
+    );
   }
-
-  handleBoundary(event) {
-    if (event.name === 'sentence') {
-      // we only care about word boundaries
-      return;
-    }
-  }
+  handleNextPage = () => {
+    this.play();
+    this.setState(
+      ({ currentPage, data }) => {
+        return {
+          currentPage: Math.min(currentPage + 1, data.length - 1),
+          currentPosition_defaultMode: 0,
+          currentPosition_shuffleModes: 0,
+          positionInReadingSequence: 0,
+        };
+      },
+      () => {
+        this.updateReferenceToDOMSentenceElements();
+        this.cleanUpHighlights(this);
+        this.persistState();
+        this.handleScrollToTop();
+        this.play();
+      }
+    );
+  };
+  handlePreviousPage = () => {
+    this.play();
+    this.setState(
+      ({ currentPage }) => {
+        return {
+          currentPage: Math.max(currentPage - 1, 0),
+          currentPosition_defaultMode: 0,
+          currentPosition_shuffleModes: 0,
+          positionInReadingSequence: 0,
+        };
+      },
+      () => {
+        this.updateReferenceToDOMSentenceElements();
+        this.cleanUpHighlights(this);
+        this.persistState();
+        this.handleScrollToTop();
+        this.play();
+      }
+    );
+  };
 
   handleClickToPlay = (clickedPosition) => {
     // do nothing if playback hasn't started at all
@@ -610,46 +687,6 @@ class App extends Component {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  handlePreviousPage = () => {
-    this.play();
-    this.setState(
-      ({ currentPage }) => {
-        return {
-          currentPage: Math.max(currentPage - 1, 0),
-          currentPosition_defaultMode: 0,
-          currentPosition_shuffleModes: 0,
-          positionInReadingSequence: 0,
-        };
-      },
-      () => {
-        this.updateReferenceToDOMSentenceElements();
-        this.cleanUpHighlights(this);
-        this.persistState();
-        this.handleScrollToTop();
-        this.play();
-      }
-    );
-  };
-  handleNextPage = () => {
-    this.play();
-    this.setState(
-      ({ currentPage, data }) => {
-        return {
-          currentPage: Math.min(currentPage + 1, data.length - 1),
-          currentPosition_defaultMode: 0,
-          currentPosition_shuffleModes: 0,
-          positionInReadingSequence: 0,
-        };
-      },
-      () => {
-        this.updateReferenceToDOMSentenceElements();
-        this.cleanUpHighlights(this);
-        this.persistState();
-        this.handleScrollToTop();
-        this.play();
-      }
-    );
-  };
   addTag = (tag) => {
     const { readingSequence } = this.state;
     let updatedReadingSequence = [...readingSequence];
