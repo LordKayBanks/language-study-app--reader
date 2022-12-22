@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.css": "/language-study-app--reader/static/css/main.cb149ddf.chunk.css",
+    "main.css": "/language-study-app--reader/static/css/main.edde2ecd.chunk.css",
     "main.js": "/language-study-app--reader/static/js/main.50696f03.chunk.js",
     "main.js.map": "/language-study-app--reader/static/js/main.50696f03.chunk.js.map",
     "runtime-main.js": "/language-study-app--reader/static/js/runtime-main.d3d836eb.js",
@@ -9,10 +9,10 @@
     "static/js/2.205779c1.chunk.js": "/language-study-app--reader/static/js/2.205779c1.chunk.js",
     "static/js/2.205779c1.chunk.js.map": "/language-study-app--reader/static/js/2.205779c1.chunk.js.map",
     "index.html": "/language-study-app--reader/index.html",
-    "precache-manifest.5d11c774589146b8e1f7330e2624fd62.js": "/language-study-app--reader/precache-manifest.5d11c774589146b8e1f7330e2624fd62.js",
+    "precache-manifest.78ac6abb8621dc2b184c7e2e231626b6.js": "/language-study-app--reader/precache-manifest.78ac6abb8621dc2b184c7e2e231626b6.js",
     "service-worker.js": "/language-study-app--reader/service-worker.js",
     "static/css/2.a2cd8a24.chunk.css.map": "/language-study-app--reader/static/css/2.a2cd8a24.chunk.css.map",
-    "static/css/main.cb149ddf.chunk.css.map": "/language-study-app--reader/static/css/main.cb149ddf.chunk.css.map",
+    "static/css/main.edde2ecd.chunk.css.map": "/language-study-app--reader/static/css/main.edde2ecd.chunk.css.map",
     "static/js/2.205779c1.chunk.js.LICENSE": "/language-study-app--reader/static/js/2.205779c1.chunk.js.LICENSE",
     "static/media/Logo.png": "/language-study-app--reader/static/media/Logo.9a07bb51.png",
     "static/media/Upload.png": "/language-study-app--reader/static/media/Upload.9a85f062.png"
@@ -21,7 +21,7 @@
     "static/js/runtime-main.d3d836eb.js",
     "static/css/2.a2cd8a24.chunk.css",
     "static/js/2.205779c1.chunk.js",
-    "static/css/main.cb149ddf.chunk.css",
+    "static/css/main.edde2ecd.chunk.css",
     "static/js/main.50696f03.chunk.js"
   ]
 }
